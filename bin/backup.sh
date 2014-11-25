@@ -1,8 +1,6 @@
 #!/usr/bin/bash
 
-echo "Mounting samba filesystem..."
-mnt=`./mount.sh 2>>bup.log`
-export BUP_DIR=$mnt
+source mount.sh
 
 bup init
 
@@ -14,4 +12,4 @@ for dir in "$@" ; do
 	bup save -n "$backupName" "$dir"
 done
 
-sudo umount $mnt
+umountShare

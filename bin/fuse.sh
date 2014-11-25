@@ -1,8 +1,6 @@
 #!/usr/bin/bash
 
-echo "Mounting samba filesystem..."
-mnt=`./mount.sh 2>>bup.log`
-export BUP_DIR=$mnt
+source mount.sh
 
 bupMnt="mnt-bup"
 
@@ -16,12 +14,12 @@ pid=$!
 function cleanup {
 	echo "Cleaning up..."
 	fusermount -u $bupMnt
-	sleep 1 # Wait for FUSE to stop preperly
-	sudo umount $mnt
+	sleep 1 # Wait for FUSE to stop properly
+	umountShare
 }
 trap cleanup EXIT
 
-sleep 1 # Wait for FUSE to start preperly
+sleep 1 # Wait for FUSE to start properly
 xdg-open "`pwd`/$bupMnt"
 
 echo "Ready!"
