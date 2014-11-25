@@ -1,6 +1,6 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
-BACKUP_DIRS=("/home/simon/Documents/administratif")
+BACKUP_DIRS=("/home/laureantoine/Documents")
 HOST="livebox"
 SHARE="backups"
 OPTIONS="guest"
@@ -33,9 +33,3 @@ function umountShare {
 }
 
 export BUP_DIR="$mnt"
-
-# Does not work
-#gvfs-mount smb://$HOST/$SHARE
-#gvfsDir=`mount | grep gvfs | cut -f 3 -d " "`
-#mntDir=`ls $gvfsDir | grep smb-share:server=$HOST,share=$SHARE`
-#echo $gvfsDir/$mntDir
