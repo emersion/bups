@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 dirname=`dirname $0`
 
@@ -18,7 +18,7 @@ fi
 for dir in "$backupDirs" ; do
 	backupName=$USER-`basename "$dir" | tr -d ' ' | tr '[:upper:]' '[:lower:]'`
 	echo -e "${Cyan}Backing up $dir as $backupName...${Color_Off}"
-	bup index "$dir"
+	bup index -u "$dir"
 	bup save -n "$backupName" "$dir"
 done
 
