@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Start backup
+Exec=bash -c '"$(dirname "$1")"/../bin/backup.sh' dummy %k
+Icon=document-save
+Terminal=true
+Type=Application
+Categories=System

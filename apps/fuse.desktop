@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Show backups
+Exec=bash -c '"$(dirname "$1")"/../bin/fuse.sh' dummy %k
+Icon=drive-harddisk
+Terminal=true
+Type=Application
+Categories=System
