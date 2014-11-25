@@ -1,8 +1,10 @@
 #!/usr/bin/bash
 
-source mount.sh
+dirname=`dirname $0`
 
-bupMnt="mnt-bup"
+source $dirname/mount.sh
+
+bupMnt="$dirname/mnt-bup"
 
 bup init
 
@@ -20,7 +22,7 @@ function cleanup {
 trap cleanup EXIT
 
 sleep 1 # Wait for FUSE to start properly
-xdg-open "`pwd`/$bupMnt"
+xdg-open "$bupMnt"
 
 echo "Ready!"
 wait $pid
