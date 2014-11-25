@@ -17,4 +17,11 @@ Launchers are available in `apps/`
 
 # Configuration
 
-All config is stored in `bin/mount.sh`.
+All config is stored in `bin/mount.sh`:
+```bash
+BACKUP_DIRS=("/path/to/dir" "/path/to/another/dir") # Dirs to backup
+HOST="livebox" # Samba hostname
+SHARE="backups" # Samba share
+OPTIONS="guest" # Samba options
+NOTIFY=1 # Send a notification when making a backup
+```
