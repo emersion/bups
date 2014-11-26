@@ -23,5 +23,5 @@ BACKUP_DIRS=("/path/to/dir" "/path/to/another/dir") # Dirs to backup
 HOST="livebox" # Samba hostname
 SHARE="backups" # Samba share
 OPTIONS="guest" # Samba options
-NOTIFY=1 # Send a notification when making a backup
+ENABLE_NOTIFY=1 # Send a notification when making a backup
 ```

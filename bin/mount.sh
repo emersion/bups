@@ -5,7 +5,9 @@ HOST="livebox"
 SHARE="backups"
 OPTIONS="guest"
 MOUNT_PATH="mnt"
-NOTIFY=1
+ENABLE_NOTIFY=0
+ENABLE_UI=1
+SUDO_CMD=sudo
 
 # See https://wiki.archlinux.org/index.php/Color_Bash_Prompt#List_of_colors_for_prompt_and_Bash
 Color_Off='\e[0m'       # Text Reset
@@ -21,15 +23,21 @@ White='\e[0;37m'        # White
 dirname=`dirname $0`
 mnt="$dirname/$MOUNT_PATH"
 
-echo "Mounting samba filesystem..."
-if [ ! -d "$mnt" ] ; then
-	mkdir "$mnt" 2>>/dev/null
+if [ type zenity >/dev/null 2>&1 ] ; then
+	ENABLE_UI=0
 fi
-sudo mount -t cifs "//$HOST/$SHARE" "$mnt" -o $OPTIONS
+
+function mountShare {
+	echo "Mounting samba filesystem..."
+	if [ ! -d "$mnt" ] ; then
+		mkdir "$mnt" 2>>/dev/null
+	fi
+	$SUDO_CMD mount -t cifs "//$HOST/$SHARE" "$mnt" -o $OPTIONS
+
+	export BUP_DIR="$mnt"
+}
 
 function umountShare {
 	echo "Unmounting samba filesystem..."
-	sudo umount "$mnt"
+	$SUDO_CMD umount "$mnt"
 }
-
-export BUP_DIR="$mnt"

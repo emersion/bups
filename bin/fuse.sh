@@ -4,6 +4,8 @@ dirname=`dirname $0`
 
 source $dirname/mount.sh
 
+mountShare
+
 bupMnt="$dirname/mnt-bup"
 
 bup init
