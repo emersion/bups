@@ -13,9 +13,11 @@ gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type bla
 
 (
 echo "# Mounting filesystem..."
+echo 0
 mountShare
 
 echo "# Initializing Bup..."
+echo 50
 bup init
 
 if [ $ENABLE_NOTIFY = 1 ] ; then
@@ -29,9 +31,6 @@ for dir in "$backupDirs" ; do
 	bup index -u "$dir"
 	echo "# Backing up $dir as $backupName (saving files)..."
 	bup save -n "$backupName" "$dir"
-
-	echo "Saving: 45.55% (2/3 files)"
-	sleep 3
 done
 
 if [ $ENABLE_NOTIFY = 1 ] ; then
@@ -42,6 +41,7 @@ echo "# Unmounting filesystem..."
 umountShare
 
 echo "# Backup finished."
+echo 100
 ) | (
 	while read output ; do
 		if [[ "$output" == Saving* ]] ; then
