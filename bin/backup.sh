@@ -47,7 +47,7 @@ echo "# Backup finished."
 	while read output ; do
 		if [[ "$output" == Saving* ]] ; then
 			echo $output | awk '{print $2}' | sed s/%//
-			echo "# $output"
+			#echo "# $output"
 		else
 			echo $output
 		fi
