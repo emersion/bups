@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-(
 dirname=`dirname $0`
 source $dirname/mount.sh
 
@@ -9,6 +8,10 @@ if [ $# = 0 ] ; then
 	backupDirs=("$BACKUP_DIRS")
 fi
 
+autoSuspendMode=`gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type`
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type blank
+
+(
 echo "# Mounting filesystem..."
 mountShare
 
@@ -26,6 +29,9 @@ for dir in "$backupDirs" ; do
 	bup index -u "$dir"
 	echo "# Backing up $dir as $backupName (saving files)..."
 	bup save -n "$backupName" "$dir"
+
+	echo "Saving: 45.55% (2/3 files)"
+	sleep 3
 done
 
 if [ $ENABLE_NOTIFY = 1 ] ; then
@@ -36,9 +42,20 @@ echo "# Unmounting filesystem..."
 umountShare
 
 echo "# Backup finished."
+) | (
+	while read output ; do
+		if [[ "$output" == Saving* ]] ; then
+			echo $output | awk '{print $2}' | sed s/%//
+			echo "# $output"
+		else
+			echo $output
+		fi
+	done
 ) |
 (zenity --progress \
 	--title="Backup" \
 	--window-icon=drive-harddisk \
 	--text="Backup started..." \
-	--pulsate 2>>/dev/null)
+	--no-cancel)
+
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type $autoSuspendMode
