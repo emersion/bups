@@ -112,8 +112,7 @@ class BackupWindow(Gtk.Window):
 
 class SettingsWindow(Gtk.Dialog):
 	def __init__(self, parent):
-		Gtk.Dialog.__init__(self, "Settings", parent, 0,
-			(Gtk.STOCK_CLOSE, Gtk.ResponseType.OK))
+		Gtk.Dialog.__init__(self, "Settings", parent)
 		self.set_border_width(10)
 		self.set_default_size(150, 100)
 
@@ -139,7 +138,19 @@ class SettingsWindow(Gtk.Dialog):
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.options_entry, False, True, 0)
 
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		button = Gtk.Button("About")
+		button.connect("clicked", parent.on_about_clicked)
+		hbox.pack_start(button, False, False, 0)
+		button = Gtk.Button("Close")
+		button.connect("clicked", self.on_close_clicked)
+		hbox.pack_end(button, False, False, 0)
+
 		self.show_all()
+
+	def on_close_clicked(self, btn):
+		self.response(Gtk.ResponseType.OK)
 
 	def get_config(self):
 		self.cfg["mount"]["target"] = self.target_entry.get_text()
@@ -152,26 +163,6 @@ class BupWindow(Gtk.Window):
 		self.set_default_size(600, 400)
 		self.set_icon_name("drive-harddisk")
 
-		# Menu
-		menu = Gtk.Menu()
-		item = Gtk.MenuItem("Backup now")
-		item.connect("activate", self.on_backup_clicked)
-		menu.append(item)
-		item = Gtk.MenuItem("Show backups")
-		item.connect("activate", self.on_mount_clicked)
-		menu.append(item)
-		item = Gtk.MenuItem("Settings")
-		item.connect("activate", self.on_settings_clicked)
-		menu.append(item)
-		item = Gtk.MenuItem("About")
-		item.connect("activate", self.on_about_clicked)
-		menu.append(item)
-		menu.show_all()
-		def on_settings_pressed(widget, event):
-			if event.type == Gdk.EventType.BUTTON_PRESS:
-				menu.popup(None, None, None, None, event.button, event.time)
-				return True
-
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.add(vbox)
 
@@ -181,6 +172,7 @@ class BupWindow(Gtk.Window):
 			hb.set_subtitle("Bup manager")
 			self.set_titlebar(hb)
 
+			# Add/remove
 			box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 			Gtk.StyleContext.add_class(box.get_style_context(), "linked")
 
@@ -188,6 +180,7 @@ class BupWindow(Gtk.Window):
 			icon = Gio.ThemedIcon(name="list-add-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
+			button.set_tooltip_text("Add a directory")
 			button.connect("clicked", self.on_add_clicked)
 			box.add(button)
 
@@ -195,30 +188,68 @@ class BupWindow(Gtk.Window):
 			icon = Gio.ThemedIcon(name="list-remove-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
+			button.set_tooltip_text("Remove this directory")
 			button.connect("clicked", self.on_remove_clicked)
 			box.add(button)
 
 			hb.pack_start(box)
 
-			button = Gtk.Button()
-			icon = Gio.ThemedIcon(name="open-menu-symbolic")
-			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-			#button.connect("clicked", self.on_settings_clicked)
-			button.add(image)
-			hb.pack_end(button)
+			# Backup/browse
+			box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+			Gtk.StyleContext.add_class(box.get_style_context(), "linked")
 
-			button.connect("button-press-event", on_settings_pressed)
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="drive-harddisk-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.set_tooltip_text("Backup now")
+			button.connect("clicked", self.on_backup_clicked)
+			box.add(button)
+
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="document-open-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.set_tooltip_text("Browse backups")
+			button.connect("clicked", self.on_mount_clicked)
+			box.add(button)
+
+			hb.pack_start(box)
+
+			# Settings
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="emblem-system-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.set_tooltip_text("Settings")
+			button.connect("clicked", self.on_settings_clicked)
+			hb.pack_end(button)
 		else:
 			tb = Gtk.Toolbar()
 			tb.set_style(Gtk.ToolbarStyle.ICONS)
 			vbox.pack_start(tb, False, False, 0)
 
 			button = Gtk.ToolButton(Gtk.STOCK_ADD)
+			button.set_tooltip_text("Add a directory")
 			button.connect("clicked", self.on_add_clicked)
 			tb.add(button)
 
 			button = Gtk.ToolButton(Gtk.STOCK_REMOVE)
+			button.set_tooltip_text("Remove this directory")
 			button.connect("clicked", self.on_remove_clicked)
+			tb.add(button)
+
+			sep = Gtk.SeparatorToolItem()
+			tb.add(sep)
+
+			button = Gtk.ToolButton(Gtk.STOCK_HARDDISK)
+			button.set_tooltip_text("Backup now")
+			button.connect("clicked", self.on_backup_clicked)
+			tb.add(button)
+
+			button = Gtk.ToolButton(Gtk.STOCK_OPEN)
+			button.set_tooltip_text("Browse backups")
+			button.connect("clicked", self.on_mount_clicked)
 			tb.add(button)
 
 			sep = Gtk.SeparatorToolItem()
@@ -227,13 +258,8 @@ class BupWindow(Gtk.Window):
 			tb.add(sep)
 
 			button = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
-			def on_settings_clicked(btn):
-				event = Gdk.EventButton()
-				event.type = Gdk.EventType.BUTTON_PRESS
-				event.time = 0
-				event.button = 1
-				on_settings_pressed(btn, event)
-			button.connect("clicked", on_settings_clicked)
+			button.set_tooltip_text("Settings")
+			button.connect("clicked", self.on_settings_clicked)
 			tb.add(button)
 
 		self.liststore = Gtk.ListStore(str)
