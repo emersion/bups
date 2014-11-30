@@ -151,37 +151,7 @@ class BupWindow(Gtk.Window):
 		self.set_default_size(600, 400)
 		self.set_icon_name("drive-harddisk")
 
-		hb = Gtk.HeaderBar(title="Bups")
-		hb.set_show_close_button(True)
-		hb.set_subtitle("Bup manager")
-		self.set_titlebar(hb)
-
-		box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-		Gtk.StyleContext.add_class(box.get_style_context(), "linked")
-
-		button = Gtk.Button()
-		icon = Gio.ThemedIcon(name="list-add-symbolic")
-		image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-		button.add(image)
-		button.connect("clicked", self.on_add_clicked)
-		box.add(button)
-
-		button = Gtk.Button()
-		icon = Gio.ThemedIcon(name="list-remove-symbolic")
-		image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-		button.add(image)
-		button.connect("clicked", self.on_remove_clicked)
-		box.add(button)
-
-		hb.pack_start(box)
-
-		button = Gtk.Button()
-		icon = Gio.ThemedIcon(name="open-menu-symbolic")
-		image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-		#button.connect("clicked", self.on_settings_clicked)
-		button.add(image)
-		hb.pack_end(button)
-
+		# Menu
 		menu = Gtk.Menu()
 		item = Gtk.MenuItem("Backup now")
 		item.connect("activate", self.on_backup_clicked)
@@ -200,7 +170,65 @@ class BupWindow(Gtk.Window):
 			if event.type == Gdk.EventType.BUTTON_PRESS:
 				menu.popup(None, None, None, None, event.button, event.time)
 				return True
-		button.connect("button-press-event", on_settings_pressed)
+
+		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		self.add(vbox)
+
+		if hasattr(Gtk, "HeaderBar"):
+			hb = Gtk.HeaderBar(title="Bups")
+			hb.set_show_close_button(True)
+			hb.set_subtitle("Bup manager")
+			self.set_titlebar(hb)
+
+			box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+			Gtk.StyleContext.add_class(box.get_style_context(), "linked")
+
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="list-add-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.connect("clicked", self.on_add_clicked)
+			box.add(button)
+
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="list-remove-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.connect("clicked", self.on_remove_clicked)
+			box.add(button)
+
+			hb.pack_start(box)
+
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="open-menu-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			#button.connect("clicked", self.on_settings_clicked)
+			button.add(image)
+			hb.pack_end(button)
+
+			button.connect("button-press-event", on_settings_pressed)
+		else:
+			tb = Gtk.Toolbar()
+			tb.set_style(Gtk.ToolbarStyle.ICONS)
+			vbox.pack_start(tb, False, False, 0)
+
+			button = Gtk.ToolButton(Gtk.STOCK_ADD)
+			button.connect("clicked", self.on_add_clicked)
+			tb.add(button)
+
+			button = Gtk.ToolButton(Gtk.STOCK_REMOVE)
+			button.connect("clicked", self.on_remove_clicked)
+			tb.add(button)
+
+			button = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
+			def on_settings_clicked(btn):
+				event = Gdk.EventButton()
+				event.type = Gdk.EventType.BUTTON_PRESS
+				event.time = 0
+				event.button = 1
+				on_settings_pressed(btn, event)
+			button.connect("clicked", on_settings_clicked)
+			tb.add(button)
 
 		self.liststore = Gtk.ListStore(str)
 
@@ -211,7 +239,8 @@ class BupWindow(Gtk.Window):
 		column.set_sort_column_id(0)
 		self.treeview.append_column(column)
 
-		self.add(self.treeview)
+		#self.add(self.treeview)
+		vbox.pack_start(self.treeview, True, True, 0)
 
 		self.config = None
 		self.configPath = os.path.abspath("../config/config.json")
@@ -298,7 +327,9 @@ class BupWindow(Gtk.Window):
 		dialog.destroy()
 
 	def on_about_clicked(self, btn):
-		dialog = Gtk.AboutDialog('Bups', self)
+		dialog = Gtk.AboutDialog()
+		dialog.set_transient_for(self)
+		dialog.set_title('Bups')
 		dialog.set_name('Bups')
 		dialog.set_program_name('Bups')
 		dialog.set_version('0.1')
