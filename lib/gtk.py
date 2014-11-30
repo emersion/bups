@@ -9,6 +9,8 @@ from manager import BupManager
 import threading
 import json
 
+GObject.threads_init() # Important: enable multi-threading support in GLib
+
 class BackupWindow(Gtk.Window):
 	def __init__(self, manager):
 		Gtk.Window.__init__(self, title="Backup")
@@ -74,7 +76,7 @@ class BackupWindow(Gtk.Window):
 				lbl += ", "+progress["speed"]
 			lbl += ")..."
 
-			GLib.idle_add(self.set_label, lbl)
+			GLib.idle_add(self.set_label, lbl, False)
 
 		def onerror(err, ctx):
 			GLib.idle_add(self.append_log, err)
@@ -137,7 +139,6 @@ class SettingsWindow(Gtk.Dialog):
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.options_entry, False, True, 0)
 
-		GObject.threads_init() # Important: enable multi-threading support in GLib
 		self.show_all()
 
 	def get_config(self):
@@ -219,6 +220,11 @@ class BupWindow(Gtk.Window):
 			button = Gtk.ToolButton(Gtk.STOCK_REMOVE)
 			button.connect("clicked", self.on_remove_clicked)
 			tb.add(button)
+
+			sep = Gtk.SeparatorToolItem()
+			sep.set_draw(False)
+			sep.set_expand(True)
+			tb.add(sep)
 
 			button = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
 			def on_settings_clicked(btn):
