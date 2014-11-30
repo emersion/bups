@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Bups
+Exec=bash -c 'cd "$(dirname "$1")/../lib/"; ./gtk.py' dummy %k
+Icon=drive-harddisk
+Terminal=false
+Type=Application
+Categories=System
