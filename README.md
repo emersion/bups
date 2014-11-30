@@ -9,6 +9,11 @@ Simple GUI to use Bup over Samba.
 
 I personaly use these scripts to backup my files to a hard disk drive plugged into my Internet box (Livebox).
 
+Features:
+* Multiple directories support
+* Backup, with a nice progressbar
+* Show current backups in your favorite file manager
+
 # How to use
 
 Just run `lib/gtk.py`.
