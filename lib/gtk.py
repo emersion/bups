@@ -108,7 +108,7 @@ class BackupWindow(Gtk.Window):
 		#buf.insert_at_cursor(txt)
 		print(txt.strip())
 
-class DialogExample(Gtk.Dialog):
+class SettingsWindow(Gtk.Dialog):
 	def __init__(self, parent):
 		Gtk.Dialog.__init__(self, "Settings", parent, 0,
 			(Gtk.STOCK_CLOSE, Gtk.ResponseType.OK))
@@ -147,11 +147,11 @@ class DialogExample(Gtk.Dialog):
 
 class BupWindow(Gtk.Window):
 	def __init__(self):
-		Gtk.Window.__init__(self, title="Backup")
+		Gtk.Window.__init__(self, title="Bups")
 		self.set_default_size(600, 400)
 		self.set_icon_name("drive-harddisk")
 
-		hb = Gtk.HeaderBar(title="Backup")
+		hb = Gtk.HeaderBar(title="Bups")
 		hb.set_show_close_button(True)
 		hb.set_subtitle("Bup manager")
 		self.set_titlebar(hb)
@@ -191,6 +191,9 @@ class BupWindow(Gtk.Window):
 		menu.append(item)
 		item = Gtk.MenuItem("Settings")
 		item.connect("activate", self.on_settings_clicked)
+		menu.append(item)
+		item = Gtk.MenuItem("About")
+		item.connect("activate", self.on_about_clicked)
 		menu.append(item)
 		menu.show_all()
 		def on_settings_pressed(widget, event):
@@ -284,7 +287,7 @@ class BupWindow(Gtk.Window):
 		t.start()
 
 	def on_settings_clicked(self, btn):
-		dialog = DialogExample(self)
+		dialog = SettingsWindow(self)
 		response = dialog.run()
 
 		if response == Gtk.ResponseType.OK:
@@ -292,6 +295,19 @@ class BupWindow(Gtk.Window):
 			print("Config changed")
 			self.save_config()
 
+		dialog.destroy()
+
+	def on_about_clicked(self, btn):
+		dialog = Gtk.AboutDialog('Bups', self)
+		dialog.set_name('Bups')
+		dialog.set_program_name('Bups')
+		dialog.set_version('0.1')
+		dialog.set_authors(['Emersion'])
+		dialog.set_comments('Bup user interface with SAMBA shares support.')
+		dialog.set_website('https://github.com/emersion/bups')
+		dialog.set_logo_icon_name('drive-harddisk')
+		dialog.set_license('Distributed under the MIT license.\nhttp://opensource.org/licenses/MIT')
+		dialog.run()
 		dialog.destroy()
 
 	def load_config(self):
