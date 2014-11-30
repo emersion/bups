@@ -1,7 +1,9 @@
-bup-samba
-=========
+Bups
+====
 
-Simple scripts to use Bup over Samba
+Simple GUI to use Bup over Samba.
+
+![161_bups](https://cloud.githubusercontent.com/assets/506932/5239177/bb45c4a4-78d7-11e4-9571-3495a0daf0e0.png)
 
 # Purposes
 
@@ -9,13 +11,21 @@ I personaly use these scripts to backup my files to a hard disk drive plugged in
 
 # How to use
 
-From a terminal:
-* Make a backup: `bin/backup.sh`
-* Show backups: `bin/fuse.sh`
+Just run `lib/gtk.py`.
+
+Requires Python 2, GTK3.
 
 Launchers are available in `apps/`
 
 # Configuration
+
+You can edit config with the GUI. You can also manually edit `config/config.json`.
+
+# Old shell scripts
+
+From a terminal:
+* Make a backup: `bin/backup.sh`
+* Show backups: `bin/fuse.sh`
 
 All config is stored in `bin/mount.sh`:
 ```bash
