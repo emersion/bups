@@ -1,10 +1,8 @@
 {
-    "dirs": [
-        "/home/simon/Documents/administratif"
-    ], 
+    "dirs": [], 
     "mount": {
-        "type": "cifs", 
-        "target": "//livebox/backups", 
-        "options": "guest"
+        "type": "", 
+        "target": "", 
+        "options": ""
     }
 }
