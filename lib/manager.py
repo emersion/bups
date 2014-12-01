@@ -17,6 +17,8 @@ class BupManager:
 
 		self.mounted = False
 
+		self.bup = BupWorker()
+
 	def backup(self, callbacks={}):
 		if not "onstatus" in callbacks:
 			callbacks["onstatus"] = noop
@@ -57,9 +59,8 @@ class BupManager:
 			})
 
 		cfg = self.config
-		self.bup = BupWorker(self.mountPath)
 
-		callbacks["onstatus"]("Mounting samba filesystem...", ctx)
+		callbacks["onstatus"]("Mounting filesystem...", ctx)
 		if not self.bupMount(callbacks):
 			return
 
@@ -72,7 +73,7 @@ class BupManager:
 		for dirpath in cfg["dirs"]:
 			backupDir(dirpath.encode('ascii'))
 
-		callbacks["onstatus"]("Unmounting samba filesystem...", ctx)
+		callbacks["onstatus"]("Unmounting filesystem...", ctx)
 		self.bupUnmount(callbacks)
 
 		callbacks["onstatus"]('Backup finished.', ctx)
@@ -87,9 +88,8 @@ class BupManager:
 			callbacks["onready"] = noop
 
 		cfg = self.config
-		self.bup = BupWorker(self.mountPath)
 
-		callbacks["onstatus"]("Mounting samba filesystem...")
+		callbacks["onstatus"]("Mounting filesystem...")
 		if not self.bupMount(callbacks):
 			return
 
@@ -130,7 +130,7 @@ class BupManager:
 
 		time.sleep(1)
 
-		callbacks["onstatus"]("Unmounting samba filesystem...")
+		callbacks["onstatus"]("Unmounting filesystem...")
 		self.bupUnmount(callbacks)
 
 		self.mounted = False
@@ -141,6 +141,8 @@ class BupManager:
 			callbacks["onerror"] = noop
 
 		cfg = self.config
+		if cfg["mount"]["type"] == "": # Nothing to mount
+			return True
 
 		if not os.path.exists(self.mountPath):
 			os.makedirs(self.mountPath)
@@ -153,11 +155,17 @@ class BupManager:
 			callbacks["onerror"]("ERR: Could not mount samba ["+str(res)+"]", {})
 			return False
 
+		self.bup.set_dir(self.mountPath)
+
 		return True
 
 	def bupUnmount(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
+
+		cfg = self.config
+		if cfg["mount"]["type"] == "": # Nothing to unmount
+			return True
 
 		res = call([self.sudoCmd+" \"umount "+self.mountPath+"\""], shell=True)
 		if res != 0:

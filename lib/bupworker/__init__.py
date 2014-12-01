@@ -11,10 +11,16 @@ from index import call_index
 from save import call_save
 
 class BupWorker:
-	def __init__(self, bupDir=None):
-		self.dir = bupDir
-		os.environ['BUP_DIR'] = bupDir
+	def __init__(self, bup_dir=None):
+		self.dir = None
+
+		if bup_dir is not None:
+			self.set_dir(bup_dir)
 		os.environ['BUP_MAIN_EXE'] = 'bup'
+
+	def set_dir(self, bup_dir):
+		self.dir = bup_dir
+		os.environ['BUP_DIR'] = bup_dir
 
 	def init(self):
 		return git.init_repo()
