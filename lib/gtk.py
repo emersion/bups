@@ -122,21 +122,68 @@ class SettingsWindow(Gtk.Dialog):
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		box.add(vbox)
 
+		# Filesystem type
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		label = Gtk.Label("Samba path", xalign=0)
-		self.target_entry = Gtk.Entry()
-		self.target_entry.set_text(self.cfg["mount"]["target"])
-		hbox.pack_start(label, True, True, 0)
-		hbox.pack_start(self.target_entry, False, True, 0)
+		label = Gtk.Label("Filesystem type", xalign=0)
 
-		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-		vbox.add(hbox)
-		label = Gtk.Label("Samba options", xalign=0)
-		self.options_entry = Gtk.Entry()
-		self.options_entry.set_text(self.cfg["mount"]["options"])
+		mount_types = ["", "cifs"]
+		mount_types_names = ["Local", "SAMBA"]
+		mount_type_store = Gtk.ListStore(str, str)
+		i = 0
+		for t in mount_types:
+			mount_type_store.append([t, mount_types_names[i]])
+			i += 1
+		self.mount_type_combo = Gtk.ComboBox.new_with_model(mount_type_store)
+		renderer_text = Gtk.CellRendererText()
+		self.mount_type_combo.pack_start(renderer_text, True)
+		self.mount_type_combo.add_attribute(renderer_text, "text", 1)
+		self.mount_type_combo.set_active(mount_types.index(self.cfg["mount"]["type"]))
+		self.mount_type_combo.connect("changed", self.on_mount_type_changed)
 		hbox.pack_start(label, True, True, 0)
-		hbox.pack_start(self.options_entry, False, True, 0)
+		hbox.pack_start(self.mount_type_combo, False, True, 0)
+
+		self.mount_boxes = {}
+
+		# Samba
+		samba_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		vbox.add(samba_box)
+		# Samba hostname
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		samba_box.add(hbox)
+		label = Gtk.Label("Hostname", xalign=0)
+		self.samba_host_entry = Gtk.Entry()
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.samba_host_entry, False, True, 0)
+
+		# Samba share
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		samba_box.add(hbox)
+		label = Gtk.Label("Samba share", xalign=0)
+		self.samba_share_entry = Gtk.Entry()
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.samba_share_entry, False, True, 0)
+
+		# Login
+		# TODO: not implemented
+		self.samba_guest_check = Gtk.CheckButton("Anonymous login")
+		self.samba_guest_check.set_sensitive(False)
+		self.samba_guest_check.set_active(True)
+		samba_box.add(self.samba_guest_check)
+
+		self.mount_boxes["cifs"] = samba_box
+
+		# Load mount settings
+		if self.cfg["mount"]["type"] == "cifs": # Samba
+			host = ""
+			share = ""
+			target = self.cfg["mount"]["target"]
+			if target.startswith("//"):
+				target = target[2:]
+			host, share = target.split("/", 1)
+
+			self.samba_host_entry.set_text(host)
+			self.samba_share_entry.set_text(share)
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
@@ -148,13 +195,42 @@ class SettingsWindow(Gtk.Dialog):
 		hbox.pack_end(button, False, False, 0)
 
 		self.show_all()
+		self.on_mount_type_changed(self.mount_type_combo)
 
 	def on_close_clicked(self, btn):
 		self.response(Gtk.ResponseType.OK)
 
+	def on_mount_type_changed(self, combo):
+		mount_type = self.get_mount_type()
+
+		for t in self.mount_boxes:
+			box = self.mount_boxes[t]
+			if t == mount_type:
+				box.show()
+			else:
+				box.hide()
+
+	def get_mount_type(self):
+		mount_type_iter = self.mount_type_combo.get_active_iter()
+		if mount_type_iter != None:
+			model = self.mount_type_combo.get_model()
+			return model[mount_type_iter][0]
+		else:
+			return ""
+
 	def get_config(self):
-		self.cfg["mount"]["target"] = self.target_entry.get_text()
-		self.cfg["mount"]["options"] = self.options_entry.get_text()
+		self.cfg["mount"]["type"] = self.get_mount_type()
+
+		if self.cfg["mount"]["type"] == "cifs": # Samba
+			self.cfg["mount"]["target"] = "//"+self.samba_host_entry.get_text()+"/"+self.samba_share_entry.get_text()
+			opts = ""
+			if self.samba_guest_check.get_active():
+				opts = "guest"
+			self.cfg["mount"]["options"] = opts
+		if self.cfg["mount"]["type"] == "": # No fs mounting
+			self.cfg["mount"]["target"] = ""
+			self.cfg["mount"]["options"] = ""
+
 		return self.cfg
 
 class BupWindow(Gtk.Window):
@@ -271,7 +347,6 @@ class BupWindow(Gtk.Window):
 		column.set_sort_column_id(0)
 		self.treeview.append_column(column)
 
-		#self.add(self.treeview)
 		vbox.pack_start(self.treeview, True, True, 0)
 
 		self.config = None
