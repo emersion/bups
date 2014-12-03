@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Show backups
-Exec=bash -c 'cd "$(dirname "$1")"/../bin/ ; if [ $TERM = dumb ] ; then x-terminal-emulator -e ./fuse.sh ; else ./fuse.sh ; fi' dummy %k
-Icon=drive-harddisk
-Terminal=true
-Type=Application
-Categories=System
