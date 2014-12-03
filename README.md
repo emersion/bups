@@ -3,7 +3,7 @@ Bups
 
 Simple GUI for [Bup](https://github.com/bup/bup), a very efficient backup system.
 
-![161_bups](https://cloud.githubusercontent.com/assets/506932/5239177/bb45c4a4-78d7-11e4-9571-3495a0daf0e0.png)
+![165_bups](https://cloud.githubusercontent.com/assets/506932/5287192/65b80d76-7b2a-11e4-8f80-eafbfaf884cb.png)
 
 # Purposes
 
@@ -15,7 +15,7 @@ Features:
 * Show current backups in your favorite file manager
 * Backups on local filesystem or over Samba
 
-![163_settings](https://cloud.githubusercontent.com/assets/506932/5250462/839b2fa2-798c-11e4-8231-1cf9353f9c61.png)
+![164_settings](https://cloud.githubusercontent.com/assets/506932/5287195/6f092482-7b2a-11e4-869d-f6d87ada0191.png)
 
 # How to use
 
