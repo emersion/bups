@@ -15,6 +15,8 @@ Features:
 * Show current backups in your favorite file manager
 * Backups on local filesystem or over Samba
 
+![163_settings](https://cloud.githubusercontent.com/assets/506932/5250462/839b2fa2-798c-11e4-8231-1cf9353f9c61.png)
+
 # How to use
 
 Just run `lib/gtk.py`.
