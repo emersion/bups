@@ -19,7 +19,7 @@ Features:
 
 # How to use
 
-Just run `lib/gtk.py`.
+Just run `bups.py`.
 
 Requires Python 2, GTK3.
 
