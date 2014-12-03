@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Bups
-Exec=bash -c 'cd "$(dirname "$1")/../lib/"; ./gtk.py' dummy %k
+Exec=bash -c 'cd "$(dirname "$1")/../"; ./bups.py' dummy %k
 Icon=drive-harddisk
 Terminal=false
 Type=Application
