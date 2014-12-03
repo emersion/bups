@@ -14,8 +14,7 @@ Features:
 * Backup, with a nice progressbar
 * Show current backups in your favorite file manager
 * Backups on local filesystem or over Samba
-
-![164_settings](https://cloud.githubusercontent.com/assets/506932/5287195/6f092482-7b2a-11e4-869d-f6d87ada0191.png)
+* Backup scheduling
 
 # How to use
 
