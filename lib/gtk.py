@@ -4,10 +4,10 @@ import sys
 import os
 from subprocess import PIPE, Popen, call
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
-from bupworker import BupWorker
 from manager import BupManager
+import anacron
 import threading
-import json
+import config
 
 GObject.threads_init() # Important: enable multi-threading support in GLib
 
@@ -110,17 +110,23 @@ class BackupWindow(Gtk.Window):
 		#buf.insert_at_cursor(txt)
 		print(txt.strip())
 
-class SettingsWindow(Gtk.Dialog):
+class SettingsWindow(Gtk.Window):
 	def __init__(self, parent):
-		Gtk.Dialog.__init__(self, "Settings", parent)
-		self.set_border_width(10)
+		Gtk.Window.__init__(self, title="Settings")
 		self.set_default_size(150, 100)
+		self.set_transient_for(parent)
 
 		self.cfg = parent.load_config()
 
-		box = self.get_content_area()
+		box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		self.add(box)
+
+		nb = Gtk.Notebook()
+		box.add(nb)
+
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-		box.add(vbox)
+		vbox.set_border_width(10)
+		nb.append_page(vbox, Gtk.Label("Destination"))
 
 		# Filesystem type
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
@@ -185,8 +191,49 @@ class SettingsWindow(Gtk.Dialog):
 			self.samba_host_entry.set_text(host)
 			self.samba_share_entry.set_text(share)
 
+		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		vbox.set_border_width(10)
+		nb.append_page(vbox, Gtk.Label("Schedule"))
+
+		# Anacron
+		anacron_available = True
+		anacron_job = None
+		try:
+			anacron_job = anacron.get_job("bups")
+		except IOError, e:
+			anacron_available = False
+			print("ERR: could not read anacron config: "+str(e))
+
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
+		label = Gtk.Label("Schedule backups", xalign=0)
+		self.schedule_switch = Gtk.Switch()
+		self.schedule_switch.set_active(anacron_job is not None)
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.schedule_switch, False, True, 0)
+
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		label = Gtk.Label("Interval (days)", xalign=0)
+		period = 1
+		if anacron_job is not None and "period" in anacron_job:
+			period = int(anacron_job["period"])
+		adjustment = Gtk.Adjustment(period, 1, 100, 1, 7, 0)
+		self.schedule_period_spin = Gtk.SpinButton()
+		self.schedule_period_spin.set_adjustment(adjustment)
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.schedule_period_spin, False, True, 0)
+
+		if not anacron_available:
+			self.schedule_switch.set_sensitive(False)
+			self.schedule_period_spin.set_sensitive(False)
+			label = Gtk.Label("Could not read anacron config.\nPlease check that anacron is installed and that you can read "+anacron.config_file+".")
+			vbox.add(label)
+
+		# Buttons
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		hbox.set_border_width(10)
+		box.add(hbox)
 		button = Gtk.Button("About")
 		button.connect("clicked", parent.on_about_clicked)
 		hbox.pack_start(button, False, False, 0)
@@ -198,7 +245,9 @@ class SettingsWindow(Gtk.Dialog):
 		self.on_mount_type_changed(self.mount_type_combo)
 
 	def on_close_clicked(self, btn):
-		self.response(Gtk.ResponseType.OK)
+		#self.response(Gtk.ResponseType.OK)
+		#win.connect("delete-event", win.quit)
+		self.hide()
 
 	def on_mount_type_changed(self, combo):
 		mount_type = self.get_mount_type()
@@ -232,6 +281,25 @@ class SettingsWindow(Gtk.Dialog):
 			self.cfg["mount"]["options"] = ""
 
 		return self.cfg
+
+	def get_anacron_config(self):
+		if not self.schedule_switch.get_active():
+			return None
+
+		dirname = os.path.realpath(os.path.dirname(__file__))
+		logfile = dirname+"/anacron-log.log"
+		cmd = dirname+"/anacron-worker.py"
+		cmd += " > "+logfile+" 2>&1"
+
+		cfg = {
+			"period": self.schedule_period_spin.get_value_as_int(),
+			"delay": 15,
+			"id": "bups",
+			"command": cmd
+		}
+
+		return cfg
+
 
 class BupWindow(Gtk.Window):
 	def __init__(self):
@@ -338,7 +406,7 @@ class BupWindow(Gtk.Window):
 			button.connect("clicked", self.on_settings_clicked)
 			tb.add(button)
 
-		self.liststore = Gtk.ListStore(str)
+		self.liststore = Gtk.ListStore(str, str)
 
 		self.treeview = Gtk.TreeView(model=self.liststore)
 
@@ -346,11 +414,13 @@ class BupWindow(Gtk.Window):
 		column = Gtk.TreeViewColumn("Directory", renderer_text, text=0)
 		column.set_sort_column_id(0)
 		self.treeview.append_column(column)
+		column = Gtk.TreeViewColumn("Name", renderer_text, text=1)
+		column.set_sort_column_id(1)
+		self.treeview.append_column(column)
 
 		vbox.pack_start(self.treeview, True, True, 0)
 
 		self.config = None
-		self.configPath = os.path.abspath("../config/config.json")
 		self.load_config()
 		for dirpath in self.config["dirs"]:
 			self.add_dir_ui(dirpath)
@@ -385,13 +455,28 @@ class BupWindow(Gtk.Window):
 			self.config["dirs"].remove(dirpath)
 			self.save_config()
 
+	def get_default_backup_name(self, dirpath):
+		return os.getlogin()+"-"+os.path.basename(dirpath).lower()
+
+	def normalize_dir(self, dir_data):
+		if type(dir_data) == str or type(dir_data) == unicode:
+			dir_data = {
+				"path": dir_data,
+				"name": self.get_default_backup_name(dir_data)
+			}
+		return dir_data
+
 	def add_dir(self, dirpath):
-		self.config["dirs"].append(dirpath)
+		self.config["dirs"].append({
+			"path": dirpath,
+			"name": self.get_default_backup_name(dirpath)
+		})
 		self.save_config()
 		self.add_dir_ui(dirpath)
 
-	def add_dir_ui(self, dirpath):
-		self.liststore.append([dirpath])
+	def add_dir_ui(self, dir_data):
+		dir_data = self.normalize_dir(dir_data)
+		self.liststore.append([dir_data["path"], dir_data["name"]])
 
 	def on_backup_clicked(self, btn):
 		win = BackupWindow(self.manager)
@@ -423,15 +508,37 @@ class BupWindow(Gtk.Window):
 		t.start()
 
 	def on_settings_clicked(self, btn):
-		dialog = SettingsWindow(self)
-		response = dialog.run()
+		win = SettingsWindow(self)
+		win.connect("hide", self.on_settings_closed)
 
-		if response == Gtk.ResponseType.OK:
-			self.config = dialog.get_config()
-			print("Config changed")
-			self.save_config()
+		win.show_all()
+	
+	def on_settings_closed(self, win):
+		self.config = win.get_config()
+		print("Config changed")
+		self.save_config()
 
-		dialog.destroy()
+		new_cfg = win.get_anacron_config()
+		win.destroy()
+
+		try:
+			current_cfg = anacron.get_job("bups")
+			print(new_cfg, current_cfg)
+			if new_cfg is None and current_cfg is not None: # Remove config
+				anacron.remove_job(current_cfg["id"])
+			elif new_cfg is not None:
+				cfg_changed = True
+				if current_cfg is not None:
+					cfg_changed = int(current_cfg["period"]) != int(new_cfg["period"])
+				if cfg_changed: # Add/update config
+					anacron.update_job(new_cfg)
+		except IOError, e:
+			print("ERR: could not update anacron config: "+str(e))
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+				Gtk.ButtonsType.OK, "Could not update anacron config")
+			dialog.format_secondary_text(str(e))
+			dialog.run()
+			dialog.destroy()
 
 	def on_about_clicked(self, btn):
 		dialog = Gtk.AboutDialog()
@@ -450,18 +557,14 @@ class BupWindow(Gtk.Window):
 
 	def load_config(self):
 		if self.config is None:
-			f = open(self.configPath, 'r')
-			self.config = json.load(f)
-			f.close()
+			self.config = config.read()
 		return self.config
 
 	def save_config(self):
 		if self.config is None:
 			print("INFO: save_config() called but no config set")
 			return
-		f = open(self.configPath, 'w')
-		json.dump(self.config, f, indent=4)
-		f.close()
+		config.write(self.config)
 
 	def quit(self, *args):
 		if self.manager.mounted:

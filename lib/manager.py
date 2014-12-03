@@ -1,7 +1,7 @@
 import os
 import time
 from subprocess import call
-from bupworker import BupWorker
+from worker import BupWorker
 
 def noop(*args):
 	pass
@@ -10,10 +10,9 @@ class BupManager:
 	def __init__(self, cfg):
 		self.config = cfg
 
-		self.mountPath = os.path.abspath("mnt")
-		self.fuseMountPath = os.path.abspath("mnt-bup")
-		#self.sudoCmd = "sudo sh -c"
-		self.sudoCmd = "gksu"
+		dirname = os.path.realpath(os.path.dirname(__file__))
+		self.mountPath = dirname+"/mnt"
+		self.fuseMountPath = dirname+"/mnt-bup"
 
 		self.mounted = False
 
@@ -31,8 +30,9 @@ class BupManager:
 
 		ctx = {}
 
-		def backupDir(dirpath):
-			backupName = os.getlogin()+"-"+os.path.basename(dirpath).lower()
+		def backupDir(dir_data):
+			dirpath = dir_data["path"].encode('ascii')
+			backupName = dir_data["name"].encode('ascii')
 
 			ctx = {
 				"path": dirpath,
@@ -70,8 +70,8 @@ class BupManager:
 		except Exception, e:
 			callbacks["onerror"]("WARN: "+str(e)+"\n", ctx)
 
-		for dirpath in cfg["dirs"]:
-			backupDir(dirpath.encode('ascii'))
+		for dir_data in cfg["dirs"]:
+			backupDir(dir_data)
 
 		callbacks["onstatus"]("Unmounting filesystem...", ctx)
 		self.bupUnmount(callbacks)
@@ -136,6 +136,15 @@ class BupManager:
 		self.mounted = False
 		callbacks["onfinish"]({})
 
+	def get_sudo(self, cmd):
+		if os.geteuid() != 0:
+			if "DISPLAY" in os.environ:
+				sudo = "gksu"
+			else:
+				sudo = "sudo sh -c"
+			cmd = sudo+" \""+cmd+"\""
+		return cmd
+
 	def bupMount(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
@@ -147,13 +156,17 @@ class BupManager:
 		if not os.path.exists(self.mountPath):
 			os.makedirs(self.mountPath)
 
-		args = "mount -t "+cfg["mount"]["type"]+" "+cfg["mount"]["target"]+" "+self.mountPath+" -o "+cfg["mount"]["options"]
-		res = call([self.sudoCmd+" \""+args+"\""], shell=True)
-		if res == 32:
-			callbacks["onerror"]("WARN: samba filesystem busy", {})
-		elif res != 0:
-			callbacks["onerror"]("ERR: Could not mount samba ["+str(res)+"]", {})
-			return False
+		if os.path.ismount(self.mountPath):
+			callbacks["onerror"]("WARN: filesystem already mounted", {})
+		else:
+			cmd = "mount -t "+cfg["mount"]["type"]+" "+cfg["mount"]["target"]+" "+self.mountPath+" -o "+cfg["mount"]["options"]
+			res = call([self.get_sudo(cmd)], shell=True)
+			if res == 32:
+				callbacks["onerror"]("WARN: filesystem busy", {})
+			elif res != 0:
+				print(self.sudoCmd+" \""+args+"\"")
+				callbacks["onerror"]("ERR: Could not mount samba ["+str(res)+"]", {})
+				return False
 
 		self.bup.set_dir(self.mountPath)
 
@@ -167,7 +180,8 @@ class BupManager:
 		if cfg["mount"]["type"] == "": # Nothing to unmount
 			return True
 
-		res = call([self.sudoCmd+" \"umount "+self.mountPath+"\""], shell=True)
+		cmd = "umount "+self.mountPath
+		res = call([self.get_sudo(cmd)], shell=True)
 		if res != 0:
 			callbacks["onerror"]("WARN: could not unmount samba filesystem ["+str(res)+"]", {})
 			return False
