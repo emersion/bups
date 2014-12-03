@@ -1,5 +1,3 @@
-#!/usr/bin/env python2
-
 import sys
 import os
 from subprocess import PIPE, Popen, call
@@ -588,9 +586,3 @@ class BupWindow(Gtk.Window):
 			t.start()
 		else:
 			Gtk.main_quit()
-
-win = BupWindow()
-win.connect("delete-event", win.quit)
-win.show_all()
-
-Gtk.main()
