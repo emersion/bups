@@ -520,15 +520,34 @@ class BupWindow(Gtk.Window):
 		win.destroy()
 
 		try:
+			task = None
 			current_cfg = anacron.get_job("bups")
 			if new_cfg is None and current_cfg is not None: # Remove config
-				anacron.remove_job(current_cfg["id"])
+				def remove_job():
+					anacron.remove_job(current_cfg["id"])
+				task = remove_job
 			elif new_cfg is not None:
 				cfg_changed = True
 				if current_cfg is not None:
 					cfg_changed = int(current_cfg["period"]) != int(new_cfg["period"])
 				if cfg_changed: # Add/update config
-					anacron.update_job(new_cfg)
+					def update_job():
+						anacron.update_job(new_cfg)
+					task = update_job
+
+			if task is not None: # Run task with a loading dialog
+				def run_task(task, onexit):
+					task()
+					onexit()
+
+				dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, "Updating configuration...")
+				def onexit():
+					GLib.idle_add(dialog.destroy)
+
+				dialog.show_all()
+
+				t = threading.Thread(target=run_task, args=(task,onexit))
+				t.start()
 		except IOError, e:
 			print("ERR: could not update anacron config: "+str(e))
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
