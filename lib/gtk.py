@@ -644,6 +644,7 @@ class BupApp(Gtk.Application):
 
 	def do_activate(self):
 		win = BupWindow(self)
+		win.connect("delete-event", win.quit)
 		win.show_all()
 
 	def do_startup(self):
