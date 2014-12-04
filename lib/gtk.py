@@ -269,9 +269,6 @@ class SettingsWindow(Gtk.Window):
 		button.connect("clicked", self.on_close_clicked)
 		hbox.pack_end(button, False, False, 0)
 
-		#self.show_all()
-		
-
 	def show_all(self):
 		Gtk.Window.show_all(self)
 		self.on_mount_type_changed(self.mount_type_combo)
