@@ -521,7 +521,6 @@ class BupWindow(Gtk.Window):
 
 		try:
 			current_cfg = anacron.get_job("bups")
-			print(new_cfg, current_cfg)
 			if new_cfg is None and current_cfg is not None: # Remove config
 				anacron.remove_job(current_cfg["id"])
 			elif new_cfg is not None:
