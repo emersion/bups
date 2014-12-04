@@ -10,10 +10,13 @@ import config
 GObject.threads_init() # Important: enable multi-threading support in GLib
 
 class BackupWindow(Gtk.Window):
-	def __init__(self, manager):
+	def __init__(self, manager, parent=None):
 		Gtk.Window.__init__(self, title="Backup")
 		self.set_border_width(10)
 		self.set_icon_name("drive-harddisk")
+
+		if parent is not None:
+			self.set_transient_for(parent)
 
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self.add(vbox)
@@ -38,10 +41,28 @@ class BackupWindow(Gtk.Window):
 		exp.add(scroll)
 		vbox.pack_start(exp, True, True, 0)
 
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		self.close_button = Gtk.Button("Close")
+		self.close_button.connect("clicked", self.on_close_clicked)
+		hbox.pack_end(self.close_button, False, False, 0)
+
 		self.manager = manager
 
 	def backup(self):
 		manager = self.manager
+
+		def set_window_deletable(deletable):
+			self.set_deletable(deletable)
+			# parent = self.get_transient_for()
+			# if parent is not None:
+			# 	parent.set_deletable(lock)
+			
+			if not deletable:
+				self.close_button.hide()
+				self.resize(1, 1) # Make window as small as possible
+			else:
+				self.close_button.show()
 
 		def onstatus(status, ctx):
 			GLib.idle_add(self.set_label, status)
@@ -80,6 +101,7 @@ class BackupWindow(Gtk.Window):
 			GLib.idle_add(self.append_log, err)
 
 		def onfinish(data, ctx):
+			GLib.idle_add(set_window_deletable, True)
 			GLib.idle_add(self.progressbar.set_fraction, 1)
 
 		callbacks = {
@@ -90,6 +112,9 @@ class BackupWindow(Gtk.Window):
 		}
 
 		self.set_label("Backup started...")
+
+		# Lock window
+		set_window_deletable(False)
 
 		t = threading.Thread(target=manager.backup, args=(callbacks,))
 		t.start()
@@ -108,11 +133,16 @@ class BackupWindow(Gtk.Window):
 		#buf.insert_at_cursor(txt)
 		print(txt.strip())
 
+	def on_close_clicked(self, btn):
+		self.destroy()
+
 class SettingsWindow(Gtk.Window):
 	def __init__(self, parent):
 		Gtk.Window.__init__(self, title="Settings")
 		self.set_default_size(150, 100)
 		self.set_transient_for(parent)
+		self.set_modal(True)
+		self.set_icon_name("drive-harddisk")
 
 		self.cfg = parent.load_config()
 
@@ -239,7 +269,11 @@ class SettingsWindow(Gtk.Window):
 		button.connect("clicked", self.on_close_clicked)
 		hbox.pack_end(button, False, False, 0)
 
-		self.show_all()
+		#self.show_all()
+		
+
+	def show_all(self):
+		Gtk.Window.show_all(self)
 		self.on_mount_type_changed(self.mount_type_combo)
 
 	def on_close_clicked(self, btn):
@@ -256,6 +290,8 @@ class SettingsWindow(Gtk.Window):
 				box.show()
 			else:
 				box.hide()
+
+		self.resize(1, 1) # Make window as smaller as possible
 
 	def get_mount_type(self):
 		mount_type_iter = self.mount_type_combo.get_active_iter()
@@ -299,9 +335,9 @@ class SettingsWindow(Gtk.Window):
 		return cfg
 
 
-class BupWindow(Gtk.Window):
-	def __init__(self):
-		Gtk.Window.__init__(self, title="Bups")
+class BupWindow(Gtk.ApplicationWindow):
+	def __init__(self, app):
+		Gtk.Window.__init__(self, title="Bups", application=app)
 		self.set_default_size(600, 400)
 		self.set_icon_name("drive-harddisk")
 
@@ -477,7 +513,7 @@ class BupWindow(Gtk.Window):
 		self.liststore.append([dir_data["path"], dir_data["name"]])
 
 	def on_backup_clicked(self, btn):
-		win = BackupWindow(self.manager)
+		win = BackupWindow(self.manager, parent=self)
 		win.show_all()
 
 		win.backup()
@@ -604,3 +640,14 @@ class BupWindow(Gtk.Window):
 			t.start()
 		else:
 			Gtk.main_quit()
+
+class BupApp(Gtk.Application):
+	def __init__(self):
+		Gtk.Application.__init__(self)
+
+	def do_activate(self):
+		win = BupWindow(self)
+		win.show_all()
+
+	def do_startup(self):
+		Gtk.Application.do_startup(self)

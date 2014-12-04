@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 
+import sys
 from gi.repository import Gtk
 from lib.gtk import BupWindow
+from lib.gtk import BupApp
 
-win = BupWindow()
-win.connect("delete-event", win.quit)
-win.show_all()
-
-Gtk.main()
+app = BupApp()
+exit_status = app.run(sys.argv)
+sys.exit(exit_status)
