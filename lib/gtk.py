@@ -54,9 +54,9 @@ class BackupWindow(Gtk.Window):
 
 		def set_window_deletable(deletable):
 			self.set_deletable(deletable)
-			# parent = self.get_transient_for()
-			# if parent is not None:
-			# 	parent.set_deletable(lock)
+			parent = self.get_transient_for()
+			if parent is not None:
+				parent.set_deletable(deletable)
 			
 			if not deletable:
 				self.close_button.hide()
