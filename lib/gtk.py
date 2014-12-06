@@ -1,5 +1,6 @@
 import sys
 import os
+import pwd
 from subprocess import PIPE, Popen, call
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
 from manager import BupManager
@@ -57,7 +58,7 @@ class BackupWindow(Gtk.Window):
 			parent = self.get_transient_for()
 			if parent is not None:
 				parent.set_deletable(deletable)
-			
+
 			if not deletable:
 				self.close_button.hide()
 				self.resize(1, 1) # Make window as small as possible
@@ -483,11 +484,21 @@ class BupWindow(Gtk.ApplicationWindow):
 			print("Removing dir "+dirpath)
 
 			model.remove(treeiter)
-			self.config["dirs"].remove(dirpath)
+			i = 0
+			for d in self.config["dirs"]:
+				dir_data = self.normalize_dir(d)
+				if dir_data["path"] == dirpath:
+					del self.config["dirs"][i]
+				i += 1
 			self.save_config()
 
 	def get_default_backup_name(self, dirpath):
-		return os.getlogin()+"-"+os.path.basename(dirpath).lower()
+		login = ''
+		try:
+			login = os.getlogin()
+		except OSError:
+			login = pwd.getpwuid(os.getuid())[0]
+		return login+"-"+os.path.basename(dirpath).lower()
 
 	def normalize_dir(self, dir_data):
 		if type(dir_data) == str or type(dir_data) == unicode:
@@ -543,7 +554,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		win.connect("hide", self.on_settings_closed)
 
 		win.show_all()
-	
+
 	def on_settings_closed(self, win):
 		self.config = win.get_config()
 		print("Config changed")
@@ -627,7 +638,7 @@ class BupWindow(Gtk.ApplicationWindow):
 				GLib.idle_add(Gtk.main_quit)
 
 			dialog.show_all()
-			
+
 			callbacks = {
 				"onfinish": onfinish,
 				"onstatus": onstatus
