@@ -207,6 +207,14 @@ class SettingsWindow(Gtk.Window):
 
 		self.mount_boxes["cifs"] = samba_box
 
+		# Samba share
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		label = Gtk.Label("Backup path", xalign=0)
+		self.path_prefix_entry = Gtk.Entry()
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.path_prefix_entry, False, True, 0)
+
 		# Load mount settings
 		if self.cfg["mount"]["type"] == "cifs": # Samba
 			host = ""
@@ -300,6 +308,7 @@ class SettingsWindow(Gtk.Window):
 
 	def get_config(self):
 		self.cfg["mount"]["type"] = self.get_mount_type()
+		self.cfg["mount"]["path"] = self.path_prefix_entry.get_text()
 
 		if self.cfg["mount"]["type"] == "cifs": # Samba
 			self.cfg["mount"]["target"] = "//"+self.samba_host_entry.get_text()+"/"+self.samba_share_entry.get_text()
@@ -527,12 +536,15 @@ class BupWindow(Gtk.ApplicationWindow):
 		def onready(data):
 			GLib.idle_add(dialog.destroy)
 			GLib.idle_add(open_mounted, data)
+		def onabord():
+			GLib.idle_add(dialog.destroy)
 
 		dialog.show_all()
 
 		callbacks = {
 			"onready": onready,
-			"onstatus": onstatus
+			"onstatus": onstatus,
+			"onabord": onabord
 		}
 
 		t = threading.Thread(target=self.manager.mount, args=(callbacks,))
@@ -624,7 +636,7 @@ class BupWindow(Gtk.ApplicationWindow):
 				print(status)
 			def onfinish(data):
 				GLib.idle_add(dialog.destroy)
-				GLib.idle_add(Gtk.main_quit)
+				#GLib.idle_add(Gtk.main_quit)
 
 			dialog.show_all()
 			
@@ -636,7 +648,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			t = threading.Thread(target=self.manager.unmount, args=(callbacks,))
 			t.start()
 		else:
-			Gtk.main_quit()
+			pass #Gtk.main_quit()
 
 class BupApp(Gtk.Application):
 	def __init__(self):
