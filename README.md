@@ -18,7 +18,7 @@ Features:
 
 # How to use
 
-Just run `./bups.py`.
+Just run `./run.py`.
 
 Requires Python 2, GTK3.
 

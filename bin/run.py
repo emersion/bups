@@ -1,9 +1,11 @@
 #!/usr/bin/env python2
 
 import sys
+sys.path.append('..')
+
 from gi.repository import Gtk
-from lib.gtk import BupWindow
-from lib.gtk import BupApp
+from app.gtk import BupWindow
+from app.gtk import BupApp
 
 app = BupApp()
 exit_status = app.run(sys.argv)

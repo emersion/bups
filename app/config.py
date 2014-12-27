@@ -1,7 +1,7 @@
 import os
 import json
 
-config_file = os.path.realpath(os.path.dirname(__file__)+"/../config/config.json")
+config_file = os.path.realpath(os.path.dirname(__file__)+"/config/config.json")
 
 def read():
 	f = open(config_file, 'r')

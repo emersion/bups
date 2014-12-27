@@ -9,7 +9,7 @@ if not "HOME" in os.environ:
 	sys.exit(1)
 
 dest_path = os.environ["HOME"]+"/.local/share/applications/bups.desktop"
-exec_path = os.path.realpath(os.path.dirname(__file__)+"/bups.py")
+exec_path = os.path.realpath(os.path.dirname(__file__)+"/run.py")
 launcher = """[Desktop Entry]
 Name=Bups
 Exec=%s
