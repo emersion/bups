@@ -18,7 +18,7 @@ Features:
 
 # How to use
 
-Just run `./run.py`.
+Just run `bin/run.py`.
 
 Requires Python 2, GTK3.
 
@@ -26,4 +26,4 @@ Launchers are available in `launchers/`
 
 # Configuration
 
-You can edit config with the GUI. You can also manually edit `config/config.json`.
+You can edit config with the GUI. You can also manually edit `app/config/config.json`.
