@@ -8,5 +8,6 @@ setup(
 	url="https://github.com/emersion/bups",
 	description="Simple GUI for Bup, a very efficient backup system.",
 
-	packages=["app"]
+	packages=["app"],
+	scripts=["bin/bups"]
 )

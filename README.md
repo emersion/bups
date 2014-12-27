@@ -18,11 +18,11 @@ Features:
 
 # How to use
 
-Just run `bin/run.py`.
+Just run `bin/bups`.
 
 Requires Python 2, GTK3.
 
-Launchers are available in `launchers/`
+Launchers are available in `launchers/`. To install a launcher for the current user, run `bin/create-launcher.py`.
 
 # Configuration
 
