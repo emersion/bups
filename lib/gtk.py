@@ -105,11 +105,16 @@ class BackupWindow(Gtk.Window):
 			GLib.idle_add(set_window_deletable, True)
 			GLib.idle_add(self.progressbar.set_fraction, 1)
 
+		def onabord():
+			GLib.idle_add(set_window_deletable, True)
+			GLib.idle_add(self.set_label, "Backup canceled.", False)
+
 		callbacks = {
 			"onstatus": onstatus,
 			"onprogress": onprogress,
 			"onerror": onerror,
-			"onfinish": onfinish
+			"onfinish": onfinish,
+			"onabord": onabord
 		}
 
 		self.set_label("Backup started...")

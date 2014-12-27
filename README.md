@@ -22,7 +22,7 @@ Just run `./bups.py`.
 
 Requires Python 2, GTK3.
 
-Launchers are available in `apps/`
+Launchers are available in `launchers/`
 
 # Configuration
 

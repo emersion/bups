@@ -1,6 +1,6 @@
 import os
 import time
-from subprocess import call
+import subprocess
 from worker import BupWorker
 
 def noop(*args):
@@ -11,8 +11,12 @@ class BupManager:
 		self.config = cfg
 
 		dirname = os.path.realpath(os.path.dirname(__file__))
-		self.mountPath = dirname+"/mnt"
-		self.fuseMountPath = dirname+"/mnt-bup"
+		self.mountPath = os.path.join(dirname, "mnt")
+		self.fuseMountPath = os.path.join(dirname, "mnt-bup")
+
+		self.bupPath = self.mountPath
+		if "path" in cfg["mount"] and cfg["mount"]["path"]:
+			self.bupPath = os.path.join(self.bupPath, cfg["mount"]["path"])
 
 		self.mounted = False
 
@@ -27,6 +31,8 @@ class BupManager:
 			callbacks["onprogress"] = noop
 		if not "onfinish" in callbacks:
 			callbacks["onfinish"] = noop
+		if not "onabord" in callbacks:
+			callbacks["onabord"] = noop
 
 		ctx = {}
 
@@ -62,6 +68,7 @@ class BupManager:
 
 		callbacks["onstatus"]("Mounting filesystem...", ctx)
 		if not self.bupMount(callbacks):
+			callbacks["onabord"]({}, ctx)
 			return
 
 		callbacks["onstatus"]("Initializing bup...", ctx)
@@ -86,11 +93,14 @@ class BupManager:
 			callbacks["onerror"] = noop
 		if not "onready" in callbacks:
 			callbacks["onready"] = noop
+		if not "onabord" in callbacks:
+			callbacks["onabord"] = noop
 
 		cfg = self.config
 
 		callbacks["onstatus"]("Mounting filesystem...")
 		if not self.bupMount(callbacks):
+			callbacks["onabord"]()
 			return
 
 		callbacks["onstatus"]("Initializing bup...")
@@ -124,7 +134,7 @@ class BupManager:
 			callbacks["onfinish"] = noop
 
 		callbacks["onstatus"]("Unmounting fuse filesystem...")
-		res = call(["fusermount -u "+self.fuseMountPath], shell=True)
+		res = subprocess.call(["fusermount -u "+self.fuseMountPath], shell=True)
 		if res != 0:
 			pass
 
@@ -160,15 +170,14 @@ class BupManager:
 			callbacks["onerror"]("WARN: filesystem already mounted", {})
 		else:
 			cmd = "mount -t "+cfg["mount"]["type"]+" "+cfg["mount"]["target"]+" "+self.mountPath+" -o "+cfg["mount"]["options"]
-			res = call([self.get_sudo(cmd)], shell=True)
+			res = subprocess.call([self.get_sudo(cmd)], shell=True)
 			if res == 32:
 				callbacks["onerror"]("WARN: filesystem busy", {})
 			elif res != 0:
-				print(self.sudoCmd+" \""+args+"\"")
-				callbacks["onerror"]("ERR: Could not mount samba ["+str(res)+"]", {})
+				callbacks["onerror"]("ERR: Could not mount samba [#"+str(res)+"] (command: "+args+")", {})
 				return False
 
-		self.bup.set_dir(self.mountPath)
+		self.bup.set_dir(self.bupPath)
 
 		return True
 
@@ -181,7 +190,7 @@ class BupManager:
 			return True
 
 		cmd = "umount "+self.mountPath
-		res = call([self.get_sudo(cmd)], shell=True)
+		res = subprocess.call([self.get_sudo(cmd)], shell=True)
 		if res != 0:
 			callbacks["onerror"]("WARN: could not unmount samba filesystem ["+str(res)+"]", {})
 			return False
