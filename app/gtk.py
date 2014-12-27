@@ -581,8 +581,12 @@ class BupWindow(Gtk.ApplicationWindow):
 		win.destroy()
 
 		try:
-			task = None
 			current_cfg = anacron.get_job("bups")
+		except IOError, e:
+			current_cfg = None
+
+		try:
+			task = None
 			if new_cfg is None and current_cfg is not None: # Remove config
 				def remove_job():
 					anacron.remove_job(current_cfg["id"])
