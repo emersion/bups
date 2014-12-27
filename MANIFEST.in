@@ -1,1 +1,1 @@
-recursive-include app/templates *
+recursive-include app/config *
