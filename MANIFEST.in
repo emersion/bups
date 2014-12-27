@@ -1,2 +1,0 @@
-recursive-include app/config *
-recursive-include app *.py

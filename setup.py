@@ -8,6 +8,9 @@ setup(
 	url="https://github.com/emersion/bups",
 	description="Simple GUI for Bup, a very efficient backup system.",
 
-	packages=["app"],
-	scripts=["bin/bups"]
+	packages=["bups", "bups.worker"],
+	package_dir={"bups": "bups"},
+	package_data={"bups": ["config/*.json"]},
+	data_files=[('/usr/share/applications', ['bin/bups.desktop'])],
+	scripts=["bin/bups"],
 )

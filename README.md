@@ -18,12 +18,14 @@ Features:
 
 # How to use
 
-Just run `bin/bups`.
-
 Requires Python 2, GTK3.
 
-Launchers are available in `launchers/`. To install a launcher for the current user, run `bin/create-launcher.py`.
+You can install Bups with [PyPI](https://pypi.python.org/pypi/Bups) or [download the source](https://github.com/emersion/bups/archive/master.zip).
+
+If you choose to install from PyPI, you can run Bups with `bups`. A launcher will be added to your apps menu.
+
+If you downloaded the source, just run `bin/bups`. To install a launcher for the current user, run `bin/create-launcher.py`.
 
 # Configuration
 
-You can edit config with the GUI. You can also manually edit `app/config/config.json`.
+You can edit config with the GUI. You can also manually edit `app/config/config.json` if you downloaded the source.

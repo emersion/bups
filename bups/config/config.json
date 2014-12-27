@@ -1,0 +1,9 @@
+{
+    "dirs": [], 
+    "mount": {
+        "path": "", 
+        "type": "", 
+        "target": "", 
+        "options": ""
+    }
+}

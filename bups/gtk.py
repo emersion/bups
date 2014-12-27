@@ -218,6 +218,7 @@ class SettingsWindow(Gtk.Window):
 		vbox.add(hbox)
 		label = Gtk.Label("Backup path", xalign=0)
 		self.path_prefix_entry = Gtk.Entry()
+		self.path_prefix_entry.set_text(self.cfg["mount"]["path"])
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.path_prefix_entry, False, True, 0)
 
@@ -645,7 +646,15 @@ class BupWindow(Gtk.ApplicationWindow):
 		if self.config is None:
 			print("INFO: save_config() called but no config set")
 			return
-		config.write(self.config)
+		try:
+			config.write(self.config)
+		except IOError, e:
+			print("ERR: could not update config: "+str(e))
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+				Gtk.ButtonsType.OK, "Could not update config")
+			dialog.format_secondary_text(str(e))
+			dialog.run()
+			dialog.destroy()
 
 	def quit(self, *args):
 		if self.manager.mounted:
