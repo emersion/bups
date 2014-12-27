@@ -1,1 +1,2 @@
 recursive-include app/config *
+recursive-include app/worker *
