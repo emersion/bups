@@ -3,6 +3,7 @@ import time
 import subprocess
 
 from worker import BupWorker
+from sudo import sudo
 
 def noop(*args):
 	pass
@@ -147,15 +148,6 @@ class BupManager:
 		self.mounted = False
 		callbacks["onfinish"]({})
 
-	def get_sudo(self, cmd):
-		if os.geteuid() != 0:
-			if "DISPLAY" in os.environ:
-				sudo = "gksu"
-			else:
-				sudo = "sudo sh -c"
-			cmd = sudo+" \""+cmd+"\""
-		return cmd
-
 	def bupMount(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
@@ -171,7 +163,7 @@ class BupManager:
 			callbacks["onerror"]("WARN: filesystem already mounted", {})
 		else:
 			cmd = "mount -t "+cfg["mount"]["type"]+" "+cfg["mount"]["target"]+" "+self.mountPath+" -o "+cfg["mount"]["options"]
-			res = subprocess.call([self.get_sudo(cmd)], shell=True)
+			res = sudo(cmd)
 			if res == 32:
 				callbacks["onerror"]("WARN: filesystem busy", {})
 			elif res != 0:
@@ -191,7 +183,7 @@ class BupManager:
 			return True
 
 		cmd = "umount "+self.mountPath
-		res = subprocess.call([self.get_sudo(cmd)], shell=True)
+		res = sudo(cmd)
 		if res != 0:
 			callbacks["onerror"]("WARN: could not unmount samba filesystem ["+str(res)+"]", {})
 			return False

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+from ..sudo import sudo
 
 config_file = "/etc/anacrontab"
 
@@ -89,13 +90,9 @@ def update_job(job, remove=False):
 	f.write(o)
 	f.close()
 
-	cmd = ["gksudo", "cp "+f.name+" "+config_file]
-	code = subprocess.call(cmd)
-
+	code = sudo("mv "+f.name+" "+config_file)
 	if code != 0:
 		raise IOError("Could not write to "+config_file+" (process returned: "+str(code)+")")
-
-	os.remove(f.name)
 
 def remove_job(job_id):
 	return update_job({ "id": job_id }, True)
