@@ -14,11 +14,11 @@ Features:
 * Backup, with a nice progressbar
 * Show current backups in your favorite file manager
 * Backups on local filesystem or over Samba
-* Backup scheduling
+* Backup scheduling (using `systemd` or `anacron`)
 
 # How to use
 
-Requires Python 2, GTK3. Tested on Archlinux and Elementary OS (so it should run on Ubuntu and Debian)
+Requires Python 2, GTK 3. Tested on Archlinux and Elementary OS (so it should run on Ubuntu and Debian).
 
 You can install Bups with [PyPI](https://pypi.python.org/pypi/Bups) or [download the source](https://github.com/emersion/bups/archive/master.zip).
 
