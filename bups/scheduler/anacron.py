@@ -43,7 +43,7 @@ def parse_config(anacrontab):
 	return cfg
 
 def read_config():
-	f = open(config_file, 'r')
+	f = open(config_file, "r")
 	cfg = parse_config(f.read())
 	f.close()
 	return cfg
@@ -57,7 +57,7 @@ def get_job(job_id):
 	return None
 
 def update_job(job, remove=False):
-	f = open(config_file, 'r')
+	f = open(config_file, "r")
 	lines = f.readlines()
 	f.close()
 

@@ -2,7 +2,7 @@ import os
 import time
 import subprocess
 
-from .worker import BupWorker
+from worker import BupWorker
 
 def noop(*args):
 	pass

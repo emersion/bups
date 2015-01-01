@@ -1,5 +1,10 @@
 {
-    "dirs": [], 
+    "dirs": [
+        {
+            "path": "/home/simon/Documents/administratif", 
+            "name": "simon-administratif"
+        }
+    ], 
     "mount": {
         "path": "", 
         "type": "", 

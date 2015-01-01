@@ -4,7 +4,7 @@ import pwd
 from subprocess import PIPE, Popen, call
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
 from manager import BupManager
-import anacron
+from scheduler import schedulers
 import threading
 import config
 
@@ -238,39 +238,71 @@ class SettingsWindow(Gtk.Window):
 		vbox.set_border_width(10)
 		nb.append_page(vbox, Gtk.Label("Schedule"))
 
-		# Anacron
-		anacron_available = True
-		anacron_job = None
-		try:
-			anacron_job = anacron.get_job("bups")
-		except IOError, e:
-			anacron_available = False
-			print("ERR: could not read anacron config: "+str(e))
+		# Schedulers
+		i = 0
+		job = None
+		active_scheduler = 0 # By default, activate the first one
+		for name in schedulers:
+			s = schedulers[name]
+			try:
+				job = s.get_job("bups")
+			except IOError, e:
+				i += 1
+				continue
+			active_scheduler = i
+			break
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
 		label = Gtk.Label("Schedule backups", xalign=0)
 		self.schedule_switch = Gtk.Switch()
-		self.schedule_switch.set_active(anacron_job is not None)
+		self.schedule_switch.set_active(job is not None)
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.schedule_switch, False, True, 0)
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
+		label = Gtk.Label("Scheduler", xalign=0)
+		schedulers_store = Gtk.ListStore(str, str, bool)
+		available_schedulers_nbr = 0
+		for name in schedulers:
+			avail = schedulers[name].is_available()
+			if avail:
+				available_schedulers_nbr += 1
+			schedulers_store.append([name, name, avail])
+		self.scheduler_combo = Gtk.ComboBox.new_with_model(schedulers_store)
+		renderer_text = Gtk.CellRendererText()
+		self.scheduler_combo.pack_start(renderer_text, True)
+		self.scheduler_combo.add_attribute(renderer_text, "text", 1)
+		self.scheduler_combo.add_attribute(renderer_text, "sensitive", 2)
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.scheduler_combo, False, True, 0)
+
+		if available_schedulers_nbr > 0:
+			self.scheduler_combo.set_active(active_scheduler)
+
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
 		label = Gtk.Label("Interval (days)", xalign=0)
 		period = 1
-		if anacron_job is not None and "period" in anacron_job:
-			period = int(anacron_job["period"])
+		if job is not None and "period" in job:
+			period = int(job["period"])
 		adjustment = Gtk.Adjustment(period, 1, 100, 1, 7, 0)
 		self.schedule_period_spin = Gtk.SpinButton()
 		self.schedule_period_spin.set_adjustment(adjustment)
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.schedule_period_spin, False, True, 0)
 
-		if not anacron_available:
+		# if not anacron_available:
+		# 	self.schedule_switch.set_sensitive(False)
+		# 	self.schedule_period_spin.set_sensitive(False)
+		# 	label = Gtk.Label("Could not read anacron config.\nPlease check that anacron is installed and that you can read "+anacron.config_file+".")
+		# 	vbox.add(label)
+
+		if available_schedulers_nbr == 0:
 			self.schedule_switch.set_sensitive(False)
 			self.schedule_period_spin.set_sensitive(False)
-			label = Gtk.Label("Could not read anacron config.\nPlease check that anacron is installed and that you can read "+anacron.config_file+".")
+			label = Gtk.Label("No scheduler available. Please install one of: "+", ".join(schedulers.keys())+".")
 			vbox.add(label)
 
 		# Buttons
@@ -329,13 +361,21 @@ class SettingsWindow(Gtk.Window):
 
 		return self.cfg
 
-	def get_anacron_config(self):
+	def get_scheduler_name(self):
+		scheduler_iter = self.scheduler_combo.get_active_iter()
+		if scheduler_iter != None:
+			model = self.scheduler_combo.get_model()
+			return model[scheduler_iter][0]
+		else:
+			return ""
+
+	def get_scheduler_config(self):
 		if not self.schedule_switch.get_active():
 			return None
 
 		dirname = os.path.realpath(os.path.dirname(__file__))
-		logfile = dirname+"/anacron-log.log"
-		cmd = dirname+"/anacron-worker.py"
+		logfile = dirname+"/scheduler-log.log"
+		cmd = dirname+"/scheduler_worker.py"
 		cmd += " > "+logfile+" 2>&1"
 
 		cfg = {
@@ -578,49 +618,69 @@ class BupWindow(Gtk.ApplicationWindow):
 		print("Config changed")
 		self.save_config()
 
-		new_cfg = win.get_anacron_config()
+		new_scheduler_name = win.get_scheduler_name()
+		new_cfg = win.get_scheduler_config()
 		win.destroy()
 
-		try:
-			current_cfg = anacron.get_job("bups")
-		except IOError, e:
-			current_cfg = None
+		for name in schedulers:
+			try:
+				current_scheduler_name = name
+				current_cfg = schedulers[name].get_job("bups")
+				break
+			except IOError, e:
+				current_cfg = None
 
-		try:
-			task = None
-			if new_cfg is None and current_cfg is not None: # Remove config
-				def remove_job():
-					anacron.remove_job(current_cfg["id"])
-				task = remove_job
-			elif new_cfg is not None:
-				cfg_changed = True
-				if current_cfg is not None:
-					cfg_changed = int(current_cfg["period"]) != int(new_cfg["period"])
-				if cfg_changed: # Add/update config
-					def update_job():
-						anacron.update_job(new_cfg)
-					task = update_job
+		current_scheduler = schedulers[current_scheduler_name]
+		new_scheduler = schedulers[new_scheduler_name]
 
-			if task is not None: # Run task with a loading dialog
-				def run_task(task, onexit):
-					task()
-					onexit()
+		def remove_job():
+			print("Removing scheduler job "+current_cfg["id"])
+			current_scheduler.remove_job(current_cfg["id"])
+		def update_job():
+			print("Updating scheduler job "+new_cfg["id"])
+			new_scheduler.update_job(new_cfg)
+		def remove_update_job():
+			if current_cfg is not None:
+				remove_job()
+			update_job()
 
-				dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, "Updating configuration...")
-				def onexit():
-					GLib.idle_add(dialog.destroy)
-
-				dialog.show_all()
-
-				t = threading.Thread(target=run_task, args=(task,onexit))
-				t.start()
-		except IOError, e:
-			print("ERR: could not update anacron config: "+str(e))
+		def show_error(e):
+			print("ERR: could not update scheduler config: "+str(e))
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-				Gtk.ButtonsType.OK, "Could not update anacron config")
+				Gtk.ButtonsType.OK, "Could not update scheduler config")
 			dialog.format_secondary_text(str(e))
 			dialog.run()
 			dialog.destroy()
+
+		task = None
+		if new_cfg is None and current_cfg is not None: # Remove config
+			task = remove_job
+		elif new_cfg is not None:
+			cfg_changed = True
+			if current_scheduler_name != new_scheduler_name:
+				task = remove_update_job
+			else:
+				if current_cfg is not None:
+					cfg_changed = int(current_cfg["period"]) != int(new_cfg["period"])
+				if cfg_changed: # Add/update config
+					task = update_job
+
+		if task is not None: # Run task with a loading dialog
+			def run_task(task, onexit):
+				try:
+					task()
+				except Exception, e:
+					GLib.idle_add(show_error, e)
+				onexit()
+
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, "Updating configuration...")
+			def onexit():
+				GLib.idle_add(dialog.destroy)
+
+			dialog.show_all()
+
+			t = threading.Thread(target=run_task, args=(task,onexit))
+			t.start()
 
 	def on_about_clicked(self, btn):
 		dialog = Gtk.AboutDialog()
