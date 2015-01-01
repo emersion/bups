@@ -18,7 +18,7 @@ Features:
 
 # How to use
 
-Requires Python 2, GTK3.
+Requires Python 2, GTK3. Tested on Archlinux and Elementary OS (so it should run on Ubuntu and Debian)
 
 You can install Bups with [PyPI](https://pypi.python.org/pypi/Bups) or [download the source](https://github.com/emersion/bups/archive/master.zip).
 
