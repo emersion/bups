@@ -7,8 +7,8 @@
     ], 
     "mount": {
         "path": "", 
-        "type": "", 
-        "target": "", 
-        "options": ""
+        "type": "cifs", 
+        "target": "//livebox/backups", 
+        "options": "guest"
     }
 }

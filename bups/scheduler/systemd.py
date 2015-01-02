@@ -12,7 +12,7 @@ def is_available():
 	return os.path.exists(config_dir)
 
 def parse_period(time_str):
-	return "7"
+	return time_str.split('/')[1]
 
 def new_config():
 	config = ConfigParser.RawConfigParser()
@@ -59,7 +59,7 @@ def update_job(job):
 	config.set("Unit", "Description", "Bups backup manager timer")
 
 	config.add_section("Timer")
-	config.set("Timer", "OnCalendar", "weekly") # TODO: support job["period"]
+	config.set("Timer", "OnCalendar", "*-*-1/"+str(job["period"]))
 	config.set("Timer", "Persistent", "true") # Starts immediately if it missed the last start time
 
 	config.add_section("Install")
@@ -82,6 +82,8 @@ def update_job(job):
 	config_file = config_prefix+".service"
 	write_config(config, config_file)
 	sudo_queue.append("chmod +r "+config_file)
+
+	sudo_queue.append("systemctl daemon-reload")
 
 	sudo_queue.append("systemctl enable "+config_prefix+".timer")
 	sudo_queue.append("systemctl start "+job["id"]+".timer")
