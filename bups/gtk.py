@@ -397,7 +397,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.add(vbox)
 
-		if hasattr(Gtk, "HeaderBar"):
+		if hasattr(Gtk, "HeaderBar"): # Use HeaderBar if available
 			hb = Gtk.HeaderBar(title="Bups")
 			hb.set_show_close_button(True)
 			hb.set_subtitle("Bup manager")
@@ -455,7 +455,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			button.set_tooltip_text("Settings")
 			button.connect("clicked", self.on_settings_clicked)
 			hb.pack_end(button)
-		else:
+		else: # Fallback to Toolbar if HeaderBar is not available
 			tb = Gtk.Toolbar()
 			tb.set_style(Gtk.ToolbarStyle.ICONS)
 			vbox.pack_start(tb, False, False, 0)
@@ -501,6 +501,10 @@ class BupWindow(Gtk.ApplicationWindow):
 		column = Gtk.TreeViewColumn("Directory", renderer_text, text=0)
 		column.set_sort_column_id(0)
 		self.treeview.append_column(column)
+
+		renderer_text = Gtk.CellRendererText()
+		renderer_text.set_property("editable", True)
+		renderer_text.connect("edited", self.on_backup_name_edited)
 		column = Gtk.TreeViewColumn("Name", renderer_text, text=1)
 		column.set_sort_column_id(1)
 		self.treeview.append_column(column)
@@ -574,6 +578,11 @@ class BupWindow(Gtk.ApplicationWindow):
 	def add_dir_ui(self, dir_data):
 		dir_data = self.normalize_dir(dir_data)
 		self.liststore.append([dir_data["path"], dir_data["name"]])
+
+	def on_backup_name_edited(self, widget, path, text):
+		self.config["dirs"][int(path)]["name"] = text
+		self.save_config()
+		self.liststore[path][1] = text
 
 	def on_backup_clicked(self, btn):
 		win = BackupWindow(self.manager, parent=self)
