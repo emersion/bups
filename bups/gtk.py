@@ -5,6 +5,7 @@ from subprocess import PIPE, Popen, call
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
 from manager import BupManager
 from scheduler import schedulers
+from version import __version__
 import threading
 import config
 import traceback
@@ -848,7 +849,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		dialog.set_title('Bups')
 		dialog.set_name('Bups')
 		dialog.set_program_name('Bups')
-		dialog.set_version('0.1')
+		dialog.set_version(__version__)
 		dialog.set_authors(['Emersion'])
 		dialog.set_comments('Bup user interface with SAMBA shares support.')
 		dialog.set_website('https://github.com/emersion/bups')

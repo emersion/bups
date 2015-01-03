@@ -1,8 +1,11 @@
+#!/usr/bin/env python2
+
 from distutils.core import setup
+from bups.version import __version__
 
 setup(
 	name="Bups",
-	version="0.3.0",
+	version=__version__,
 	author="emersion",
 	author_email="contact@emersion.fr",
 	url="https://github.com/emersion/bups",
