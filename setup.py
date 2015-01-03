@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
 	name="Bups",
-	version="0.2.1",
+	version="0.3.0",
 	author="emersion",
 	author_email="contact@emersion.fr",
 	url="https://github.com/emersion/bups",
