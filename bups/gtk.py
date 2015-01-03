@@ -166,12 +166,27 @@ class SettingsWindow(Gtk.Window):
 		box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self.add(box)
 
-		nb = Gtk.Notebook()
-		box.add(nb)
+		stack, nb = None, None
+		if hasattr(Gtk, "Stack"): # Use Stack if available
+			stack = Gtk.Stack()
+			stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+
+			stack_switcher = Gtk.StackSwitcher()
+			stack_switcher.set_stack(stack)
+			stack_switcher.set_halign(Gtk.Align.CENTER)
+
+			box.pack_start(stack_switcher, False, False, 0)
+			box.pack_start(stack, True, True, 0)
+		else:
+			nb = Gtk.Notebook()
+			box.add(nb)
 
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		vbox.set_border_width(10)
-		nb.append_page(vbox, Gtk.Label("Destination"))
+		if stack is not None:
+			stack.add_titled(vbox, "destination", "Destination")
+		else:
+			nb.append_page(vbox, Gtk.Label("Destination"))
 
 		# Filesystem type
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
@@ -247,7 +262,10 @@ class SettingsWindow(Gtk.Window):
 
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		vbox.set_border_width(10)
-		nb.append_page(vbox, Gtk.Label("Schedule"))
+		if stack is not None:
+			stack.add_titled(vbox, "schedule", "Schedule")
+		else:
+			nb.append_page(vbox, Gtk.Label("Schedule"))
 
 		# Schedulers
 		i = 0
