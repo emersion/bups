@@ -584,6 +584,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 			sidebar_vbox.pack_end(sidebar_hbox, False, False, 0)
 			button = Gtk.Button("Save")
+			button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 			button.connect("clicked", self.on_sidebar_save)
 			sidebar_hbox.pack_end(button, False, False, 0)
 			button = Gtk.Button("Cancel")
