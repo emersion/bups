@@ -3,7 +3,7 @@ Bups
 
 Simple GUI for [Bup](https://github.com/bup/bup), a very efficient backup system.
 
-![169_bups](https://cloud.githubusercontent.com/assets/506932/5602590/ce7d2144-9357-11e4-9c11-714c6bcaaeaa.png)
+![Main window](https://cloud.githubusercontent.com/assets/506932/5603135/275a7ccc-9375-11e4-9aec-d4ae9ef97cd4.png)
 
 # Purposes
 
@@ -15,7 +15,7 @@ Features:
 * Show current backups in your favorite file manager
 * Backups on local filesystem or over Samba
 * Backup scheduling (using `systemd` or `anacron`)
-* Exclude directories/patterns
+* Exclude paths/patterns
 
 # How to use
 
@@ -26,7 +26,7 @@ Installation:
 * Otherwise, you can install Bups from PyPI: https://pypi.python.org/pypi/Bups
 * You can also download the source (not recommended): https://github.com/emersion/bups/archive/master.zip
 
-After installation, you can start Bups by running `bups`. A launcher will also be added to your apps menu.
+After installation, you can start Bups by running `bups`. A launcher will also be added to your desktop's app menu.
 
 If you downloaded the source, run `bin/bups`.
 
