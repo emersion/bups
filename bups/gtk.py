@@ -758,12 +758,22 @@ class BupWindow(Gtk.ApplicationWindow):
 		def open_mounted(data):
 			call("xdg-open "+data["path"], shell=True)
 
+		def show_error(e):
+			print("ERR: could not mount bup filesystem: "+str(e))
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+				Gtk.ButtonsType.OK, "Could not mount filesystem")
+			dialog.format_secondary_text(str(e))
+			dialog.run()
+			dialog.destroy()
+
 		def onstatus(status):
 			GLib.idle_add(dialog.format_secondary_text, status)
 			print(status)
 		def onready(data):
 			GLib.idle_add(dialog.destroy)
 			GLib.idle_add(open_mounted, data)
+		def onerror(err):
+			GLib.idle_add(show_error, err)
 		def onabord():
 			GLib.idle_add(dialog.destroy)
 
@@ -772,10 +782,18 @@ class BupWindow(Gtk.ApplicationWindow):
 		callbacks = {
 			"onready": onready,
 			"onstatus": onstatus,
+			"onerror": onerror,
 			"onabord": onabord
 		}
 
-		t = threading.Thread(target=self.manager.mount, args=(callbacks,))
+		def do_mount(manager, callbacks):
+			try:
+				manager.mount(callbacks)
+			except Exception, e:
+				callbacks["onabord"]()
+				callbacks["onerror"](traceback.format_exc())
+
+		t = threading.Thread(target=do_mount, args=(self.manager, callbacks))
 		t.start()
 
 	def on_settings_clicked(self, btn):
