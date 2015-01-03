@@ -1,6 +1,7 @@
 import os
 import time
 import subprocess
+import tempfile
 
 from worker import BupWorker
 from sudo import sudo
@@ -12,9 +13,8 @@ class BupManager:
 	def __init__(self, cfg):
 		self.config = cfg
 
-		dirname = os.path.realpath(os.path.dirname(__file__))
-		self.mountPath = os.path.join(dirname, "mnt")
-		self.fuseMountPath = os.path.join(dirname, "mnt-bup")
+		self.mountPath = tempfile.mkdtemp(prefix="bups-mnt-")
+		self.fuseMountPath = tempfile.mkdtemp(prefix="bups-fuse-")
 
 		self.bupPath = self.mountPath
 		if "path" in cfg["mount"] and cfg["mount"]["path"]:
@@ -147,6 +147,8 @@ class BupManager:
 
 		time.sleep(1)
 
+		os.rmdir(self.fuseMountPath)
+
 		callbacks["onstatus"]("Unmounting filesystem...")
 		self.bupUnmount(callbacks)
 
@@ -185,6 +187,7 @@ class BupManager:
 
 		cfg = self.config
 		if cfg["mount"]["type"] == "": # Nothing to unmount
+			os.rmdir(self.mountPath)
 			return True
 
 		cmd = "umount "+self.mountPath
@@ -192,3 +195,5 @@ class BupManager:
 		if res != 0:
 			callbacks["onerror"]("WARN: could not unmount samba filesystem ["+str(res)+"]", {})
 			return False
+
+		os.rmdir(self.mountPath)
