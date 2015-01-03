@@ -7,6 +7,7 @@ from manager import BupManager
 from scheduler import schedulers
 import threading
 import config
+import traceback
 
 GObject.threads_init() # Important: enable multi-threading support in GLib
 
@@ -15,6 +16,7 @@ class BackupWindow(Gtk.Window):
 		Gtk.Window.__init__(self, title="Backup")
 		self.set_border_width(10)
 		self.set_icon_name("drive-harddisk")
+		self.set_position(Gtk.WindowPosition.CENTER)
 
 		if parent is not None:
 			self.set_transient_for(parent)
@@ -122,7 +124,14 @@ class BackupWindow(Gtk.Window):
 		# Lock window
 		set_window_deletable(False)
 
-		t = threading.Thread(target=manager.backup, args=(callbacks,))
+		def do_backup(manager, callbacks):
+			try:
+				return manager.backup(callbacks)
+			except Exception, e:
+				callbacks["onerror"](traceback.format_exc(), {})
+				callbacks["onabord"]()
+
+		t = threading.Thread(target=do_backup, args=(manager, callbacks))
 		t.start()
 
 	def set_label(self, txt, logLabel=True):
@@ -149,6 +158,7 @@ class SettingsWindow(Gtk.Window):
 		self.set_transient_for(parent)
 		self.set_modal(True)
 		self.set_icon_name("drive-harddisk")
+		self.set_position(Gtk.WindowPosition.CENTER)
 
 		self.cfg = parent.load_config()
 
@@ -391,8 +401,9 @@ class SettingsWindow(Gtk.Window):
 class BupWindow(Gtk.ApplicationWindow):
 	def __init__(self, app):
 		Gtk.Window.__init__(self, title="Bups", application=app)
-		self.set_default_size(600, 400)
+		self.set_default_size(800, 400)
 		self.set_icon_name("drive-harddisk")
+		self.set_position(Gtk.WindowPosition.CENTER)
 
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.add(vbox)
@@ -422,6 +433,16 @@ class BupWindow(Gtk.ApplicationWindow):
 			button.set_tooltip_text("Remove this directory")
 			button.connect("clicked", self.on_remove_clicked)
 			box.add(button)
+
+			if hasattr(Gtk, "Revealer"):
+				button = Gtk.ToggleButton()
+				icon = Gio.ThemedIcon(name="document-properties-symbolic")
+				image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+				button.add(image)
+				button.set_tooltip_text("Properties")
+				button.connect("clicked", self.on_properties_clicked)
+				box.add(button)
+				self.sidebar_btn = button
 
 			hb.pack_start(box)
 
@@ -509,7 +530,68 @@ class BupWindow(Gtk.ApplicationWindow):
 		column.set_sort_column_id(1)
 		self.treeview.append_column(column)
 
-		vbox.pack_start(self.treeview, True, True, 0)
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+		vbox.pack_start(hbox, True, True, 0)
+
+		scrolled = Gtk.ScrolledWindow()
+		#scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		scrolled.add(self.treeview)
+
+		hbox.pack_start(scrolled, True, True, 0)
+
+		if hasattr(Gtk, "Revealer"): # Gtk.Revealer is available since GTK 3.10
+			self.sidebar = Gtk.Revealer()
+			self.sidebar.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
+
+			sidebar_ctn = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+			self.sidebar.add(sidebar_ctn)
+
+			sidebar_ctn.pack_start(Gtk.VSeparator(), False, False, 0)
+
+			sidebar_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+			sidebar_vbox.set_border_width(10)
+			sidebar_ctn.pack_start(sidebar_vbox, True, True, 0)
+
+			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+			sidebar_vbox.add(sidebar_hbox)
+			label = Gtk.Label("Backup name", xalign=0)
+			self.sidebar_name_entry = Gtk.Entry()
+			sidebar_hbox.pack_start(label, True, True, 0)
+			sidebar_hbox.pack_start(self.sidebar_name_entry, False, True, 0)
+
+			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+			sidebar_vbox.add(sidebar_hbox)
+			label = Gtk.Label("Exclude paths", xalign=0)
+			self.sidebar_exclude_entry = Gtk.Entry()
+			sidebar_hbox.pack_start(label, True, True, 0)
+			sidebar_hbox.pack_start(self.sidebar_exclude_entry, False, True, 0)
+
+			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+			sidebar_vbox.add(sidebar_hbox)
+			label = Gtk.Label("Exclude patterns", xalign=0)
+			self.sidebar_excluderx_entry = Gtk.Entry()
+			sidebar_hbox.pack_start(label, True, True, 0)
+			sidebar_hbox.pack_start(self.sidebar_excluderx_entry, False, True, 0)
+
+			label = Gtk.Label()
+			label.set_markup("""<small>Enter a comma-separated list of paths and patterns to exclude.\n<a href="https://github.com/bup/bup/blob/master/Documentation/bup-index.md">Read the docs</a></small>""")
+			sidebar_vbox.add(label)
+
+			self.sidebar_onefilesystem_check = Gtk.CheckButton("Don't cross filesystem boundaries")
+			sidebar_vbox.add(self.sidebar_onefilesystem_check)
+
+			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+			sidebar_vbox.pack_end(sidebar_hbox, False, False, 0)
+			button = Gtk.Button("Save")
+			button.connect("clicked", self.on_sidebar_save)
+			sidebar_hbox.pack_end(button, False, False, 0)
+			button = Gtk.Button("Cancel")
+			button.connect("clicked", self.on_sidebar_cancel)
+			sidebar_hbox.pack_end(button, False, False, 0)
+
+			hbox.pack_start(self.sidebar, False, False, 0)
+		else: # TODO: fallback
+			self.sidebar = None
 
 		self.config = None
 		self.load_config()
@@ -517,6 +599,74 @@ class BupWindow(Gtk.ApplicationWindow):
 			self.add_dir_ui(dirpath)
 
 		self.manager = BupManager(self.load_config())
+
+	def get_selected_row_index(self):
+		selection = self.treeview.get_selection()
+		model, treeiter = selection.get_selected()
+		path = model[treeiter].path
+		index = path.get_indices()[0]
+
+		return index
+
+	def show_sidebar(self):
+		if self.sidebar is not None:
+			self.sidebar.set_reveal_child(True)
+			self.sidebar_btn.set_active(True)
+
+	def hide_sidebar(self):
+		if self.sidebar is not None:
+			self.sidebar.set_reveal_child(False)
+			self.sidebar_btn.set_active(False)
+
+	def on_properties_clicked(self, btn):
+		if not self.sidebar_btn.get_active():
+			self.hide_sidebar()
+			return
+
+		index = self.get_selected_row_index()
+		cfg = self.config["dirs"][index]
+
+		self.sidebar_name_entry.set_text(cfg["name"])
+
+		exclude = ""
+		if "exclude" in cfg:
+			exclude = ", ".join(cfg["exclude"])
+		self.sidebar_exclude_entry.set_text(exclude)
+
+		excluderx = ""
+		if "excluderx" in cfg:
+			excluderx = ", ".join(cfg["excluderx"])
+		self.sidebar_excluderx_entry.set_text(excluderx)
+
+		onefilesystem = cfg.get("onefilesystem", False)
+		self.sidebar_onefilesystem_check.set_active(onefilesystem)
+
+		self.show_sidebar()
+
+	def on_sidebar_cancel(self, btn):
+		self.hide_sidebar()
+
+	def on_sidebar_save(self, btn):
+		index = self.get_selected_row_index()
+		
+		cfg = self.config["dirs"][index]
+
+		cfg["name"] = self.sidebar_name_entry.get_text()
+
+		exclude = self.sidebar_exclude_entry.get_text()
+		cfg["exclude"] = [x.strip() for x in exclude.split(',')]
+		if "" in cfg["exclude"]: cfg["exclude"].remove("")
+
+		excluderx = self.sidebar_excluderx_entry.get_text()
+		cfg["excluderx"] = [x.strip() for x in excluderx.split(',')]
+		if "" in cfg["excluderx"]: cfg["excluderx"].remove("")
+
+		cfg["onefilesystem"] = self.sidebar_onefilesystem_check.get_active()
+
+		self.config["dirs"][index] = cfg
+		self.save_config()
+
+		self.hide_sidebar()
 
 	def on_add_clicked(self, btn):
 		dialog = Gtk.FileChooserDialog("Please choose a directory", self,
@@ -550,6 +700,8 @@ class BupWindow(Gtk.ApplicationWindow):
 					del self.config["dirs"][i]
 				i += 1
 			self.save_config()
+
+			self.on_sidebar_cancel(None)
 
 	def get_default_backup_name(self, dirpath):
 		login = ''
@@ -624,7 +776,6 @@ class BupWindow(Gtk.ApplicationWindow):
 
 	def on_settings_closed(self, win):
 		self.config = win.get_config()
-		print("Config changed")
 		self.save_config()
 
 		new_scheduler_name = win.get_scheduler_name()
@@ -715,6 +866,9 @@ class BupWindow(Gtk.ApplicationWindow):
 		if self.config is None:
 			print("INFO: save_config() called but no config set")
 			return
+		
+		print("Saving config")
+
 		try:
 			config.write(self.config)
 		except IOError, e:

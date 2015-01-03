@@ -8,7 +8,6 @@ from bup.hashsplit import GIT_MODE_TREE, GIT_MODE_FILE
 from options import OptionsDict
 
 def call_index(dirpath, optDict={}, callbacks={}):
-    optDict = {}
     opt = OptionsDict(optDict)
 
     if "onread" in callbacks:
@@ -212,6 +211,17 @@ def call_index(dirpath, optDict={}, callbacks={}):
         msw.close()
         hlinks.commit_save()
 
+    def parse_excludes(opt): # See https://github.com/bup/bup/blob/master/lib/bup/helpers.py#L838
+        return sorted(frozenset([realpath(x) for x in (opt.exclude_paths or [])]))
+    def parse_rx_excludes(opt): # See https://github.com/bup/bup/blob/master/lib/bup/helpers.py#L859
+        excluded_patterns = []
+        for x in (opt.exclude_rxs or []):
+            try:
+                excluded_patterns.append(re.compile(x))
+            except re.error, ex:
+                raise Exception('invalid --exclude-rx pattern (%s): %s' % (x, ex))
+        return excluded_patterns
+
     git.check_repo_or_die()
     indexfile = git.repo('bupindex')
-    update_index(dirpath, [], [])
+    update_index(dirpath, parse_excludes(opt), parse_rx_excludes(opt))

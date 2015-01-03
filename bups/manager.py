@@ -39,8 +39,10 @@ class BupManager:
 		ctx = {}
 
 		def backupDir(dir_data):
-			dirpath = dir_data["path"].encode('ascii')
-			backupName = dir_data["name"].encode('ascii')
+			dirpath = dir_data["path"].encode("ascii")
+			backupName = dir_data["name"].encode("ascii")
+			excludePaths = [x.encode("ascii") for x in dir_data.get("exclude", [])]
+			excludeRxs = [x.encode("ascii") for x in dir_data.get("excluderx", [])]
 
 			ctx = {
 				"path": dirpath,
@@ -52,7 +54,10 @@ class BupManager:
 
 			callbacks["onstatus"]("Backing up "+backupName+": indexing files...", ctx)
 
-			self.bup.index(dirpath, {}, {
+			self.bup.index(dirpath, {
+				"exclude_paths": excludePaths,
+				"exclude_rxs": excludeRxs
+			}, {
 				"onread": lambda line: None,
 				"onprogress": onprogress
 			})
