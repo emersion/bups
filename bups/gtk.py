@@ -591,6 +591,9 @@ class BupWindow(Gtk.ApplicationWindow):
 			sidebar_hbox.pack_end(button, False, False, 0)
 
 			hbox.pack_start(self.sidebar, False, False, 0)
+
+			selection = self.treeview.get_selection()
+			selection.connect("changed", self.on_treeview_selection_changed)
 		else: # TODO: fallback
 			self.sidebar = None
 
@@ -619,11 +622,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			self.sidebar.set_reveal_child(False)
 			self.sidebar_btn.set_active(False)
 
-	def on_properties_clicked(self, btn):
-		if not self.sidebar_btn.get_active():
-			self.hide_sidebar()
-			return
-
+	def update_sidebar(self):
 		index = self.get_selected_row_index()
 		cfg = self.config["dirs"][index]
 
@@ -642,6 +641,16 @@ class BupWindow(Gtk.ApplicationWindow):
 		onefilesystem = cfg.get("onefilesystem", False)
 		self.sidebar_onefilesystem_check.set_active(onefilesystem)
 
+	def on_treeview_selection_changed(self, selection):
+		if self.sidebar.get_reveal_child():
+			self.update_sidebar()
+
+	def on_properties_clicked(self, btn):
+		if not self.sidebar_btn.get_active():
+			self.hide_sidebar()
+			return
+
+		self.update_sidebar()
 		self.show_sidebar()
 
 	def on_sidebar_cancel(self, btn):
