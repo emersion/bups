@@ -19,7 +19,7 @@ Features:
 
 # How to use
 
-Requires Python 2, GTK 3. Tested on Archlinux and Elementary OS (so it should run on Ubuntu and Debian).
+Requires Python 2, GTK 3 and Bup. Tested on Archlinux and Elementary OS (so it should run on Ubuntu and Debian).
 
 Installation:
 * If you are running on a Debian-based system, you can install the `.deb` package from here: http://ftp.emersion.fr/bups/
