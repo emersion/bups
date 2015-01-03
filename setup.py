@@ -1,7 +1,10 @@
 #!/usr/bin/env python2
 
+import os
 from distutils.core import setup
-from bups.version import __version__
+
+version_file = open(os.path.join(os.path.dirname(__file__), 'VERSION'))
+__version__ = version_file.read().strip()
 
 setup(
 	name="Bups",
@@ -14,6 +17,9 @@ setup(
 	packages=["bups", "bups.worker", "bups.scheduler"],
 	package_dir={"bups": "bups"},
 	package_data={"bups": ["config/*.json"]},
-	data_files=[('/usr/share/applications', ['bin/bups.desktop'])],
+	data_files=[
+		('', ['VERSION']),
+		('/usr/share/applications', ['bin/bups.desktop'])
+	],
 	scripts=["bin/bups"],
 )
