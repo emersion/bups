@@ -1,0 +1,237 @@
+# BUPS
+# Copyright (C) 2015 Emersion
+# This file is distributed under the same license as the bups package.
+# Emersion <contact@emersion.fr>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: bups 0.3.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-04 14:12+0100\n"
+"PO-Revision-Date: 2015-01-04 14:16+0100\n"
+"Last-Translator: Emersion <contact@emersion.fr>\n"
+"Language-Team: français <>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.7.1\n"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:24
+msgid "Backup"
+msgstr "Sauvegarde"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:35
+msgid "Ready."
+msgstr "Prêt."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:51
+msgid "Details"
+msgstr "Détails"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:57
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:351
+msgid "Close"
+msgstr "Fermer"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:86
+#, python-brace-format
+msgid "Backing up {name}: "
+msgstr "Sauvegarde de {name}: "
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:88
+msgid "indexing files"
+msgstr "indexation des fichiers"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:90
+msgid "saving files"
+msgstr "sauvegarde des fichiers"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:92
+msgid "reading indexes"
+msgstr "lecture des index"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:104
+#, python-brace-format
+msgid "{remaining_time} remaining"
+msgstr "{remaining_time} restant"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:120
+msgid "Backup canceled."
+msgstr "Sauvegarde annulée."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:130
+msgid "Backup started..."
+msgstr "Sauvegarde démarrée..."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:164
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:502
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:539
+msgid "Settings"
+msgstr "Paramètres"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:194
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:196
+msgid "Destination"
+msgstr "Destination"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:201
+msgid "Filesystem type"
+msgstr "Type du système de fichiers"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:204
+msgid "Local"
+msgstr "Local"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:204
+msgid "SAMBA"
+msgstr "SAMBA"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:227
+msgid "Hostname"
+msgstr "Hôte"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:235
+msgid "Samba share"
+msgstr "Partage samba"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:242
+msgid "Anonymous login"
+msgstr "Connexion anonyme"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:252
+msgid "Backup path"
+msgstr "Chemin de la sauvegarde"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:273
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:275
+msgid "Schedule"
+msgstr "Planifier"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:293
+msgid "Schedule backups"
+msgstr "Planifier les sauvegardes"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:301
+msgid "Scheduler"
+msgstr "Planificateur"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:322
+msgid "Interval (days)"
+msgstr "Intervale (jours)"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:341
+msgid "No scheduler available. Please install one of:"
+msgstr "Aucun planificateur n'est disponible. Installez l'un de :"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:348
+msgid "About"
+msgstr "À propos"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:440
+msgid "Bup manager"
+msgstr "Gestionnaire pour Bup"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:451
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:511
+msgid "Add a directory"
+msgstr "Ajouter un dossier"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:459
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:516
+msgid "Remove this directory"
+msgstr "Enlever ce dossier"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:468
+msgid "Properties"
+msgstr "Propriétés"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:483
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:524
+msgid "Backup now"
+msgstr "Sauvegarder maintenant"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:491
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:529
+msgid "Browse backups"
+msgstr "Parcourir les sauvegardes"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:548
+msgid "Directory"
+msgstr "Dossier"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:555
+msgid "Name"
+msgstr "Nom"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:583
+msgid "Backup name"
+msgstr "Nom de la sauvegarde"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:590
+msgid "Exclude paths"
+msgstr "Chemins exclus"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:597
+msgid "Exclude patterns"
+msgstr "Motifs exclus"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:603
+msgid "Enter a comma-separated list of paths and patterns to exclude."
+msgstr "Entrez une liste de chemins et motifs à exclure séparés par des virgules."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:604
+msgid "Read the docs"
+msgstr "Lire la documentation"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:607
+msgid "Don't cross filesystem boundaries"
+msgstr "Ne pas sortir des limites du système de fichiers"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:612
+msgid "Save"
+msgstr "Enregistrer"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:616
+msgid "Cancel"
+msgstr "Annuler"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:709
+msgid "Please choose a directory"
+msgstr "Choisissez un dossier"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:783
+msgid "Mounting filesystem..."
+msgstr "Montage du système de fichiers..."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:791
+msgid "Could not mount filesystem"
+msgstr "Impossible de monter le système de fichiers"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:865
+msgid "Could not update scheduler config"
+msgstr "Impossible de mettre à jour la configuration du planificateur"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:891
+msgid "Updating configuration..."
+msgstr "Mise à jour de la configuration..."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:908
+msgid "Simple GUI for Bup, a very efficient backup system."
+msgstr "Interface graphique intuitive pour Bup, un système de sauvegarde efficace."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:911
+msgid "Distributed under the MIT license."
+msgstr "Distribué sous licence MIT."
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:932
+msgid "Could not update config"
+msgstr "Impossible de mettre à jour la configuration"
+
+#: /home/simon/public_html/bups/tools/../bups/gtk.py:939
+msgid "Unmounting filesystem..."
+msgstr "Démontage du système de fichiers..."
+
+#~ msgid "Bup user interface with SAMBA shares support."
+#~ msgstr "Interface pour Bup avec support de partages SAMBA."

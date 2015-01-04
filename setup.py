@@ -13,12 +13,14 @@ setup(
 	author_email="contact@emersion.fr",
 	url="https://github.com/emersion/bups",
 	description="Simple GUI for Bup, a very efficient backup system.",
+	license="MIT",
 
 	packages=["bups", "bups.worker", "bups.scheduler"],
 	package_dir={"bups": "bups"},
 	package_data={"bups": ["config/*.json", "VERSION"]},
 	data_files=[
-		('/usr/share/applications', ['bin/bups.desktop'])
+		('/usr/share/applications', ['bin/bups.desktop']),
+		('/usr/share/locale', ['locale'])
 	],
 	scripts=["bin/bups"],
 )

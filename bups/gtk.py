@@ -9,12 +9,19 @@ from version import __version__
 import threading
 import config
 import traceback
+import gettext
 
 GObject.threads_init() # Important: enable multi-threading support in GLib
 
+# l10n
+if gettext.find('bups', os.path.dirname(__file__)+'/../locale'):
+	gettext.install('bups', os.path.dirname(__file__)+'/../locale')
+else: # Try global translation
+	gettext.install('bups')
+
 class BackupWindow(Gtk.Window):
 	def __init__(self, manager, parent=None):
-		Gtk.Window.__init__(self, title="Backup")
+		Gtk.Window.__init__(self, title=_("Backup"))
 		self.set_border_width(10)
 		self.set_icon_name("drive-harddisk")
 		self.set_position(Gtk.WindowPosition.CENTER)
@@ -25,7 +32,7 @@ class BackupWindow(Gtk.Window):
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		self.add(vbox)
 
-		self.label = Gtk.Label("Ready.", xalign=0)
+		self.label = Gtk.Label(_("Ready."), xalign=0)
 		self.label.set_justify(Gtk.Justification.LEFT)
 		vbox.pack_start(self.label, False, False, 0)
 
@@ -41,13 +48,13 @@ class BackupWindow(Gtk.Window):
 		scroll = Gtk.ScrolledWindow()
 		scroll.add(self.textview)
 		exp = Gtk.Expander()
-		exp.set_label("Details")
+		exp.set_label(_("Details"))
 		exp.add(scroll)
 		vbox.pack_start(exp, True, True, 0)
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		self.close_button = Gtk.Button("Close")
+		self.close_button = Gtk.Button(_("Close"))
 		self.close_button.connect("clicked", self.on_close_clicked)
 		hbox.pack_end(self.close_button, False, False, 0)
 
@@ -76,13 +83,13 @@ class BackupWindow(Gtk.Window):
 			if "percentage" in progress:
 				GLib.idle_add(self.progressbar.set_fraction, progress["percentage"]/100)
 
-			lbl = "Backing up "+ctx["name"]+": "
+			lbl = _("Backing up {name}: ").format(name=ctx["name"])
 			if progress["type"] == "index":
-				lbl += "indexing files"
+				lbl += _("indexing files")
 			elif progress["type"] == "save":
-				lbl += "saving files"
+				lbl += _("saving files")
 			elif progress["type"] == "read_index":
-				lbl += "reading indexes"
+				lbl += _("reading indexes")
 			else:
 				return
 			lbl += " "
@@ -94,7 +101,7 @@ class BackupWindow(Gtk.Window):
 			if "bytes_done" in progress:
 				lbl += ", "+str(int(progress["bytes_done"]/1024))+"/"+str(int(progress["bytes_total"]/1024))+"k"
 			if "remaining_time" in progress and progress["remaining_time"]:
-				lbl += ", "+progress["remaining_time"]+" remaining"
+				lbl += ", "+_("{remaining_time} remaining").format(remaining_time=progress["remaining_time"])
 			if "speed" in progress and progress["speed"]:
 				lbl += ", "+progress["speed"]
 			lbl += ")..."
@@ -110,7 +117,7 @@ class BackupWindow(Gtk.Window):
 
 		def onabord():
 			GLib.idle_add(set_window_deletable, True)
-			GLib.idle_add(self.set_label, "Backup canceled.", False)
+			GLib.idle_add(self.set_label, _("Backup canceled."), False)
 
 		callbacks = {
 			"onstatus": onstatus,
@@ -120,7 +127,7 @@ class BackupWindow(Gtk.Window):
 			"onabord": onabord
 		}
 
-		self.set_label("Backup started...")
+		self.set_label(_("Backup started..."))
 
 		# Lock window
 		set_window_deletable(False)
@@ -154,7 +161,7 @@ class BackupWindow(Gtk.Window):
 
 class SettingsWindow(Gtk.Window):
 	def __init__(self, parent):
-		Gtk.Window.__init__(self, title="Settings")
+		Gtk.Window.__init__(self, title=_("Settings"))
 		self.set_default_size(150, 100)
 		self.set_transient_for(parent)
 		self.set_modal(True)
@@ -184,17 +191,17 @@ class SettingsWindow(Gtk.Window):
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		vbox.set_border_width(10)
 		if stack is not None:
-			stack.add_titled(vbox, "destination", "Destination")
+			stack.add_titled(vbox, "destination", _("Destination"))
 		else:
-			nb.append_page(vbox, Gtk.Label("Destination"))
+			nb.append_page(vbox, Gtk.Label(_("Destination")))
 
 		# Filesystem type
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		label = Gtk.Label("Filesystem type", xalign=0)
+		label = Gtk.Label(_("Filesystem type"), xalign=0)
 
 		mount_types = ["", "cifs"]
-		mount_types_names = ["Local", "SAMBA"]
+		mount_types_names = [_("Local"), _("SAMBA")]
 		mount_type_store = Gtk.ListStore(str, str)
 		i = 0
 		for t in mount_types:
@@ -217,7 +224,7 @@ class SettingsWindow(Gtk.Window):
 		# Samba hostname
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		samba_box.add(hbox)
-		label = Gtk.Label("Hostname", xalign=0)
+		label = Gtk.Label(_("Hostname"), xalign=0)
 		self.samba_host_entry = Gtk.Entry()
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.samba_host_entry, False, True, 0)
@@ -225,14 +232,14 @@ class SettingsWindow(Gtk.Window):
 		# Samba share
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		samba_box.add(hbox)
-		label = Gtk.Label("Samba share", xalign=0)
+		label = Gtk.Label(_("Samba share"), xalign=0)
 		self.samba_share_entry = Gtk.Entry()
 		hbox.pack_start(label, True, True, 0)
 		hbox.pack_start(self.samba_share_entry, False, True, 0)
 
 		# Login
 		# TODO: not implemented
-		self.samba_guest_check = Gtk.CheckButton("Anonymous login")
+		self.samba_guest_check = Gtk.CheckButton(_("Anonymous login"))
 		self.samba_guest_check.set_sensitive(False)
 		self.samba_guest_check.set_active(True)
 		samba_box.add(self.samba_guest_check)
@@ -242,7 +249,7 @@ class SettingsWindow(Gtk.Window):
 		# Samba share
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		label = Gtk.Label("Backup path", xalign=0)
+		label = Gtk.Label(_("Backup path"), xalign=0)
 		self.path_prefix_entry = Gtk.Entry()
 		self.path_prefix_entry.set_text(self.cfg["mount"]["path"])
 		hbox.pack_start(label, True, True, 0)
@@ -263,9 +270,9 @@ class SettingsWindow(Gtk.Window):
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		vbox.set_border_width(10)
 		if stack is not None:
-			stack.add_titled(vbox, "schedule", "Schedule")
+			stack.add_titled(vbox, "schedule", _("Schedule"))
 		else:
-			nb.append_page(vbox, Gtk.Label("Schedule"))
+			nb.append_page(vbox, Gtk.Label(_("Schedule")))
 
 		# Schedulers
 		i = 0
@@ -283,7 +290,7 @@ class SettingsWindow(Gtk.Window):
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		label = Gtk.Label("Schedule backups", xalign=0)
+		label = Gtk.Label(_("Schedule backups"), xalign=0)
 		self.schedule_switch = Gtk.Switch()
 		self.schedule_switch.set_active(job is not None)
 		hbox.pack_start(label, True, True, 0)
@@ -291,7 +298,7 @@ class SettingsWindow(Gtk.Window):
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		label = Gtk.Label("Scheduler", xalign=0)
+		label = Gtk.Label(_("Scheduler"), xalign=0)
 		schedulers_store = Gtk.ListStore(str, str, bool)
 		available_schedulers_nbr = 0
 		for name in schedulers:
@@ -312,7 +319,7 @@ class SettingsWindow(Gtk.Window):
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
-		label = Gtk.Label("Interval (days)", xalign=0)
+		label = Gtk.Label(_("Interval (days)"), xalign=0)
 		period = 1
 		if job is not None and "period" in job:
 			period = int(job["period"])
@@ -331,17 +338,17 @@ class SettingsWindow(Gtk.Window):
 		if available_schedulers_nbr == 0:
 			self.schedule_switch.set_sensitive(False)
 			self.schedule_period_spin.set_sensitive(False)
-			label = Gtk.Label("No scheduler available. Please install one of: "+", ".join(schedulers.keys())+".")
+			label = Gtk.Label(_("No scheduler available. Please install one of:")+" " + ", ".join(schedulers.keys())+".")
 			vbox.add(label)
 
 		# Buttons
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		hbox.set_border_width(10)
 		box.add(hbox)
-		button = Gtk.Button("About")
+		button = Gtk.Button(_("About"))
 		button.connect("clicked", parent.on_about_clicked)
 		hbox.pack_start(button, False, False, 0)
-		button = Gtk.Button("Close")
+		button = Gtk.Button(_("Close"))
 		button.connect("clicked", self.on_close_clicked)
 		hbox.pack_end(button, False, False, 0)
 
@@ -430,7 +437,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		if hasattr(Gtk, "HeaderBar"): # Use HeaderBar if available
 			hb = Gtk.HeaderBar(title="Bups")
 			hb.set_show_close_button(True)
-			hb.set_subtitle("Bup manager")
+			hb.set_subtitle(_("Bup manager"))
 			self.set_titlebar(hb)
 
 			# Add/remove
@@ -441,7 +448,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			icon = Gio.ThemedIcon(name="list-add-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
-			button.set_tooltip_text("Add a directory")
+			button.set_tooltip_text(_("Add a directory"))
 			button.connect("clicked", self.on_add_clicked)
 			box.add(button)
 
@@ -449,7 +456,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			icon = Gio.ThemedIcon(name="list-remove-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
-			button.set_tooltip_text("Remove this directory")
+			button.set_tooltip_text(_("Remove this directory"))
 			button.connect("clicked", self.on_remove_clicked)
 			box.add(button)
 
@@ -458,7 +465,7 @@ class BupWindow(Gtk.ApplicationWindow):
 				icon = Gio.ThemedIcon(name="document-properties-symbolic")
 				image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 				button.add(image)
-				button.set_tooltip_text("Properties")
+				button.set_tooltip_text(_("Properties"))
 				button.connect("clicked", self.on_properties_clicked)
 				box.add(button)
 				self.sidebar_btn = button
@@ -473,7 +480,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			icon = Gio.ThemedIcon(name="drive-harddisk-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
-			button.set_tooltip_text("Backup now")
+			button.set_tooltip_text(_("Backup now"))
 			button.connect("clicked", self.on_backup_clicked)
 			box.add(button)
 
@@ -481,7 +488,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			icon = Gio.ThemedIcon(name="document-open-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
-			button.set_tooltip_text("Browse backups")
+			button.set_tooltip_text(_("Browse backups"))
 			button.connect("clicked", self.on_mount_clicked)
 			box.add(button)
 
@@ -492,7 +499,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			icon = Gio.ThemedIcon(name="emblem-system-symbolic")
 			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
 			button.add(image)
-			button.set_tooltip_text("Settings")
+			button.set_tooltip_text(_("Settings"))
 			button.connect("clicked", self.on_settings_clicked)
 			hb.pack_end(button)
 		else: # Fallback to Toolbar if HeaderBar is not available
@@ -501,12 +508,12 @@ class BupWindow(Gtk.ApplicationWindow):
 			vbox.pack_start(tb, False, False, 0)
 
 			button = Gtk.ToolButton(Gtk.STOCK_ADD)
-			button.set_tooltip_text("Add a directory")
+			button.set_tooltip_text(_("Add a directory"))
 			button.connect("clicked", self.on_add_clicked)
 			tb.add(button)
 
 			button = Gtk.ToolButton(Gtk.STOCK_REMOVE)
-			button.set_tooltip_text("Remove this directory")
+			button.set_tooltip_text(_("Remove this directory"))
 			button.connect("clicked", self.on_remove_clicked)
 			tb.add(button)
 
@@ -514,12 +521,12 @@ class BupWindow(Gtk.ApplicationWindow):
 			tb.add(sep)
 
 			button = Gtk.ToolButton(Gtk.STOCK_HARDDISK)
-			button.set_tooltip_text("Backup now")
+			button.set_tooltip_text(_("Backup now"))
 			button.connect("clicked", self.on_backup_clicked)
 			tb.add(button)
 
 			button = Gtk.ToolButton(Gtk.STOCK_OPEN)
-			button.set_tooltip_text("Browse backups")
+			button.set_tooltip_text(_("Browse backups"))
 			button.connect("clicked", self.on_mount_clicked)
 			tb.add(button)
 
@@ -529,7 +536,7 @@ class BupWindow(Gtk.ApplicationWindow):
 			tb.add(sep)
 
 			button = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
-			button.set_tooltip_text("Settings")
+			button.set_tooltip_text(_("Settings"))
 			button.connect("clicked", self.on_settings_clicked)
 			tb.add(button)
 
@@ -538,14 +545,14 @@ class BupWindow(Gtk.ApplicationWindow):
 		self.treeview = Gtk.TreeView(model=self.liststore)
 
 		renderer_text = Gtk.CellRendererText()
-		column = Gtk.TreeViewColumn("Directory", renderer_text, text=0)
+		column = Gtk.TreeViewColumn(_("Directory"), renderer_text, text=0)
 		column.set_sort_column_id(0)
 		self.treeview.append_column(column)
 
 		renderer_text = Gtk.CellRendererText()
 		renderer_text.set_property("editable", True)
 		renderer_text.connect("edited", self.on_backup_name_edited)
-		column = Gtk.TreeViewColumn("Name", renderer_text, text=1)
+		column = Gtk.TreeViewColumn(_("Name"), renderer_text, text=1)
 		column.set_sort_column_id(1)
 		self.treeview.append_column(column)
 
@@ -573,39 +580,40 @@ class BupWindow(Gtk.ApplicationWindow):
 
 			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 			sidebar_vbox.add(sidebar_hbox)
-			label = Gtk.Label("Backup name", xalign=0)
+			label = Gtk.Label(_("Backup name"), xalign=0)
 			self.sidebar_name_entry = Gtk.Entry()
 			sidebar_hbox.pack_start(label, True, True, 0)
 			sidebar_hbox.pack_start(self.sidebar_name_entry, False, True, 0)
 
 			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 			sidebar_vbox.add(sidebar_hbox)
-			label = Gtk.Label("Exclude paths", xalign=0)
+			label = Gtk.Label(_("Exclude paths"), xalign=0)
 			self.sidebar_exclude_entry = Gtk.Entry()
 			sidebar_hbox.pack_start(label, True, True, 0)
 			sidebar_hbox.pack_start(self.sidebar_exclude_entry, False, True, 0)
 
 			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 			sidebar_vbox.add(sidebar_hbox)
-			label = Gtk.Label("Exclude patterns", xalign=0)
+			label = Gtk.Label(_("Exclude patterns"), xalign=0)
 			self.sidebar_excluderx_entry = Gtk.Entry()
 			sidebar_hbox.pack_start(label, True, True, 0)
 			sidebar_hbox.pack_start(self.sidebar_excluderx_entry, False, True, 0)
 
 			label = Gtk.Label()
-			label.set_markup("""<small>Enter a comma-separated list of paths and patterns to exclude.\n<a href="https://github.com/bup/bup/blob/master/Documentation/bup-index.md">Read the docs</a></small>""")
+			label.set_markup("<small>"+_("Enter a comma-separated list of paths and patterns to exclude.")+
+				"\n<a href=\"https://github.com/bup/bup/blob/master/Documentation/bup-index.md\">"+_("Read the docs")+"</a></small>")
 			sidebar_vbox.add(label)
 
-			self.sidebar_onefilesystem_check = Gtk.CheckButton("Don't cross filesystem boundaries")
+			self.sidebar_onefilesystem_check = Gtk.CheckButton(_("Don't cross filesystem boundaries"))
 			sidebar_vbox.add(self.sidebar_onefilesystem_check)
 
 			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 			sidebar_vbox.pack_end(sidebar_hbox, False, False, 0)
-			button = Gtk.Button("Save")
-			button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+			button = Gtk.Button(_("Save"))
+			button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION) # Since GTK 3.10
 			button.connect("clicked", self.on_sidebar_save)
 			sidebar_hbox.pack_end(button, False, False, 0)
-			button = Gtk.Button("Cancel")
+			button = Gtk.Button(_("Cancel"))
 			button.connect("clicked", self.on_sidebar_cancel)
 			sidebar_hbox.pack_end(button, False, False, 0)
 
@@ -698,7 +706,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		self.hide_sidebar()
 
 	def on_add_clicked(self, btn):
-		dialog = Gtk.FileChooserDialog("Please choose a directory", self,
+		dialog = Gtk.FileChooserDialog(_("Please choose a directory"), self,
 			Gtk.FileChooserAction.SELECT_FOLDER,
 			(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
 			Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
@@ -772,7 +780,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		win.backup()
 
 	def on_mount_clicked(self, btn):
-		dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, "Mounting filesystem...")
+		dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, _("Mounting filesystem..."))
 
 		def open_mounted(data):
 			call("xdg-open "+data["path"], shell=True)
@@ -780,7 +788,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		def show_error(e):
 			print("ERR: could not mount bup filesystem: "+str(e))
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-				Gtk.ButtonsType.OK, "Could not mount filesystem")
+				Gtk.ButtonsType.OK, _("Could not mount filesystem"))
 			dialog.format_secondary_text(str(e))
 			dialog.run()
 			dialog.destroy()
@@ -854,7 +862,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		def show_error(e):
 			print("ERR: could not update scheduler config: "+str(e))
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-				Gtk.ButtonsType.OK, "Could not update scheduler config")
+				Gtk.ButtonsType.OK, _("Could not update scheduler config"))
 			dialog.format_secondary_text(str(e))
 			dialog.run()
 			dialog.destroy()
@@ -880,7 +888,7 @@ class BupWindow(Gtk.ApplicationWindow):
 					GLib.idle_add(show_error, e)
 				onexit()
 
-			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, "Updating configuration...")
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, _("Updating configuration..."))
 			def onexit():
 				GLib.idle_add(dialog.destroy)
 
@@ -897,10 +905,10 @@ class BupWindow(Gtk.ApplicationWindow):
 		dialog.set_program_name('Bups')
 		dialog.set_version(__version__)
 		dialog.set_authors(['Emersion'])
-		dialog.set_comments('Bup user interface with SAMBA shares support.')
+		dialog.set_comments(_('Simple GUI for Bup, a very efficient backup system.'))
 		dialog.set_website('https://github.com/emersion/bups')
 		dialog.set_logo_icon_name('drive-harddisk')
-		dialog.set_license('Distributed under the MIT license.\nhttp://opensource.org/licenses/MIT')
+		dialog.set_license(_('Distributed under the MIT license.')+'\nhttp://opensource.org/licenses/MIT')
 		dialog.run()
 		dialog.destroy()
 
@@ -921,14 +929,14 @@ class BupWindow(Gtk.ApplicationWindow):
 		except IOError, e:
 			print("ERR: could not update config: "+str(e))
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-				Gtk.ButtonsType.OK, "Could not update config")
+				Gtk.ButtonsType.OK, _("Could not update config"))
 			dialog.format_secondary_text(str(e))
 			dialog.run()
 			dialog.destroy()
 
 	def quit(self, *args):
 		if self.manager.mounted:
-			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, "Unmounting filesystem...")
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, _("Unmounting filesystem..."))
 
 			def onstatus(status):
 				GLib.idle_add(dialog.format_secondary_text, status)
