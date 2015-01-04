@@ -3,8 +3,14 @@
 import os
 from distutils.core import setup
 
-version_file = open(os.path.join(os.path.dirname(__file__), 'bups', 'VERSION'))
+dirname = os.path.dirname(__file__)
+
+version_file = open(os.path.join(dirname, 'bups', 'VERSION'))
 __version__ = version_file.read().strip()
+
+locale_files = []
+for locale in os.listdir(os.path.join(dirname, 'locale')):
+	locale_files.append(('/usr/share/locale/'+locale+'/LC_MESSAGES/bups.mo', ['locale/'+locale+'/LC_MESSAGES/bups.mo']))
 
 setup(
 	name="Bups",
@@ -19,8 +25,7 @@ setup(
 	package_dir={"bups": "bups"},
 	package_data={"bups": ["config/*.json", "VERSION"]},
 	data_files=[
-		('/usr/share/applications', ['bin/bups.desktop']),
-		('/usr/share/locale', ['locale'])
-	],
+		('/usr/share/applications', ['bin/bups.desktop'])
+	] + locale_files,
 	scripts=["bin/bups"],
 )
