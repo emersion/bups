@@ -10,7 +10,7 @@ __version__ = version_file.read().strip()
 
 locale_files = []
 for locale in os.listdir(os.path.join(dirname, 'locale')):
-	locale_files.append(('/usr/share/locale/'+locale+'/LC_MESSAGES/bups.mo', ['locale/'+locale+'/LC_MESSAGES/bups.mo']))
+	locale_files.append(('/usr/share/locale/'+locale+'/LC_MESSAGES', ['locale/'+locale+'/LC_MESSAGES/bups.mo']))
 
 setup(
 	name="Bups",
