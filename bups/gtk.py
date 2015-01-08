@@ -462,13 +462,15 @@ class BupWindow(Gtk.ApplicationWindow):
 
 			if hasattr(Gtk, "Revealer"):
 				button = Gtk.ToggleButton()
-				icon = Gio.ThemedIcon(name="document-properties-symbolic")
-				image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-				button.add(image)
-				button.set_tooltip_text(_("Properties"))
-				button.connect("clicked", self.on_properties_clicked)
-				box.add(button)
-				self.sidebar_btn = button
+			else:
+				button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="document-properties-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.set_tooltip_text(_("Properties"))
+			button.connect("clicked", self.on_properties_clicked)
+			box.add(button)
+			self.sidebar_btn = button
 
 			hb.pack_start(box)
 
@@ -560,69 +562,21 @@ class BupWindow(Gtk.ApplicationWindow):
 		vbox.pack_start(hbox, True, True, 0)
 
 		scrolled = Gtk.ScrolledWindow()
-		#scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 		scrolled.add(self.treeview)
 
 		hbox.pack_start(scrolled, True, True, 0)
 
+		self.sidebar = None
 		if hasattr(Gtk, "Revealer"): # Gtk.Revealer is available since GTK 3.10
 			self.sidebar = Gtk.Revealer()
 			self.sidebar.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
 
-			sidebar_ctn = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-			self.sidebar.add(sidebar_ctn)
-
-			sidebar_ctn.pack_start(Gtk.VSeparator(), False, False, 0)
-
-			sidebar_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-			sidebar_vbox.set_border_width(10)
-			sidebar_ctn.pack_start(sidebar_vbox, True, True, 0)
-
-			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-			sidebar_vbox.add(sidebar_hbox)
-			label = Gtk.Label(_("Backup name"), xalign=0)
-			self.sidebar_name_entry = Gtk.Entry()
-			sidebar_hbox.pack_start(label, True, True, 0)
-			sidebar_hbox.pack_start(self.sidebar_name_entry, False, True, 0)
-
-			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-			sidebar_vbox.add(sidebar_hbox)
-			label = Gtk.Label(_("Exclude paths"), xalign=0)
-			self.sidebar_exclude_entry = Gtk.Entry()
-			sidebar_hbox.pack_start(label, True, True, 0)
-			sidebar_hbox.pack_start(self.sidebar_exclude_entry, False, True, 0)
-
-			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-			sidebar_vbox.add(sidebar_hbox)
-			label = Gtk.Label(_("Exclude patterns"), xalign=0)
-			self.sidebar_excluderx_entry = Gtk.Entry()
-			sidebar_hbox.pack_start(label, True, True, 0)
-			sidebar_hbox.pack_start(self.sidebar_excluderx_entry, False, True, 0)
-
-			label = Gtk.Label()
-			label.set_markup("<small>"+_("Enter a comma-separated list of paths and patterns to exclude.")+
-				"\n<a href=\"https://github.com/bup/bup/blob/master/Documentation/bup-index.md\">"+_("Read the docs")+"</a></small>")
-			sidebar_vbox.add(label)
-
-			self.sidebar_onefilesystem_check = Gtk.CheckButton(_("Don't cross filesystem boundaries"))
-			sidebar_vbox.add(self.sidebar_onefilesystem_check)
-
-			sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-			sidebar_vbox.pack_end(sidebar_hbox, False, False, 0)
-			button = Gtk.Button(_("Save"))
-			button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION) # Since GTK 3.10
-			button.connect("clicked", self.on_sidebar_save)
-			sidebar_hbox.pack_end(button, False, False, 0)
-			button = Gtk.Button(_("Cancel"))
-			button.connect("clicked", self.on_sidebar_cancel)
-			sidebar_hbox.pack_end(button, False, False, 0)
+			self.create_properties(self.sidebar)
 
 			hbox.pack_start(self.sidebar, False, False, 0)
 
 			selection = self.treeview.get_selection()
 			selection.connect("changed", self.on_treeview_selection_changed)
-		else: # TODO: fallback
-			self.sidebar = None
 
 		self.config = None
 		self.load_config()
@@ -630,6 +584,56 @@ class BupWindow(Gtk.ApplicationWindow):
 			self.add_dir_ui(dirpath)
 
 		self.manager = BupManager(self.load_config())
+
+	def create_properties(self, outer):
+		sidebar_ctn = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+		outer.add(sidebar_ctn)
+
+		sidebar_ctn.pack_start(Gtk.VSeparator(), False, False, 0)
+
+		sidebar_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+		sidebar_vbox.set_border_width(10)
+		sidebar_ctn.pack_start(sidebar_vbox, True, True, 0)
+
+		sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+		sidebar_vbox.add(sidebar_hbox)
+		label = Gtk.Label(_("Backup name"), xalign=0)
+		self.sidebar_name_entry = Gtk.Entry()
+		sidebar_hbox.pack_start(label, True, True, 0)
+		sidebar_hbox.pack_start(self.sidebar_name_entry, False, True, 0)
+
+		sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+		sidebar_vbox.add(sidebar_hbox)
+		label = Gtk.Label(_("Exclude paths"), xalign=0)
+		self.sidebar_exclude_entry = Gtk.Entry()
+		sidebar_hbox.pack_start(label, True, True, 0)
+		sidebar_hbox.pack_start(self.sidebar_exclude_entry, False, True, 0)
+
+		sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+		sidebar_vbox.add(sidebar_hbox)
+		label = Gtk.Label(_("Exclude patterns"), xalign=0)
+		self.sidebar_excluderx_entry = Gtk.Entry()
+		sidebar_hbox.pack_start(label, True, True, 0)
+		sidebar_hbox.pack_start(self.sidebar_excluderx_entry, False, True, 0)
+
+		label = Gtk.Label()
+		label.set_markup("<small>"+_("Enter a comma-separated list of paths and patterns to exclude.")+
+			"\n<a href=\"https://github.com/bup/bup/blob/master/Documentation/bup-index.md\">"+_("Read the docs")+"</a></small>")
+		sidebar_vbox.add(label)
+
+		self.sidebar_onefilesystem_check = Gtk.CheckButton(_("Don't cross filesystem boundaries"))
+		sidebar_vbox.add(self.sidebar_onefilesystem_check)
+
+		sidebar_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+		sidebar_vbox.pack_end(sidebar_hbox, False, False, 0)
+		button = Gtk.Button(_("Save"))
+		if hasattr(Gtk, "STYLE_CLASS_SUGGESTED_ACTION"): # Since GTK 3.10
+			button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+		button.connect("clicked", self.on_sidebar_save)
+		sidebar_hbox.pack_end(button, False, False, 0)
+		button = Gtk.Button(_("Cancel"))
+		button.connect("clicked", self.on_sidebar_cancel)
+		sidebar_hbox.pack_end(button, False, False, 0)
 
 	def get_selected_row_index(self):
 		selection = self.treeview.get_selection()
@@ -640,14 +644,17 @@ class BupWindow(Gtk.ApplicationWindow):
 		return index
 
 	def show_sidebar(self):
-		if self.sidebar is not None:
+		if type(self.sidebar) == Gtk.Revealer:
 			self.sidebar.set_reveal_child(True)
 			self.sidebar_btn.set_active(True)
 
 	def hide_sidebar(self):
-		if self.sidebar is not None:
+		if type(self.sidebar) == Gtk.Revealer:
 			self.sidebar.set_reveal_child(False)
 			self.sidebar_btn.set_active(False)
+		if type(self.sidebar) == Gtk.Window:
+			self.sidebar.close()
+			self.sidebar = None
 
 	def update_sidebar(self):
 		index = self.get_selected_row_index()
@@ -673,12 +680,24 @@ class BupWindow(Gtk.ApplicationWindow):
 			self.update_sidebar()
 
 	def on_properties_clicked(self, btn):
-		if not self.sidebar_btn.get_active():
-			self.hide_sidebar()
-			return
+		if hasattr(Gtk, "Revealer") and type(self.sidebar) == Gtk.Revealer:
+			if not self.sidebar_btn.get_active():
+				self.hide_sidebar()
+				return
 
-		self.update_sidebar()
-		self.show_sidebar()
+			self.update_sidebar()
+			self.show_sidebar()
+		else:
+			self.sidebar = Gtk.Window(title=_("Properties"))
+			self.sidebar.set_position(Gtk.WindowPosition.CENTER)
+			self.sidebar.set_transient_for(self)
+			self.sidebar.set_modal(True)
+			self.sidebar.set_resizable(False)
+
+			self.create_properties(self.sidebar)
+			self.update_sidebar()
+
+			self.sidebar.show_all()
 
 	def on_sidebar_cancel(self, btn):
 		self.hide_sidebar()
