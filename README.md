@@ -23,6 +23,7 @@ Requires Python 2, GTK 3 and Bup. Tested on Archlinux and Elementary OS (so it s
 
 Installation:
 * If you are running on a Debian-based system, you can install the `.deb` package from here: http://ftp.emersion.fr/bups/
+* If you are using Archlinux, install it from the AUR: https://aur.archlinux.org/packages/bups/
 * Otherwise, you can install Bups from PyPI: https://pypi.python.org/pypi/Bups
 * You can also download the source (not recommended): https://github.com/emersion/bups/archive/master.zip
 
