@@ -5,10 +5,29 @@ sys.path.append('/usr/lib/bup')
 
 import os
 from subprocess import PIPE, Popen, call
-from gi.repository import GObject
+import contextlib
+import json
 from bup import git
-from index import call_index
-from save import call_save
+ 
+# Unix, Windows and old Macintosh end-of-line
+newlines = ['\n', '\r\n', '\r']
+def unbuffered(proc, stream='stdout'):
+	stream = getattr(proc, stream)
+	with contextlib.closing(stream):
+		while True:
+			out = []
+			last = stream.read(1)
+			# Don't loop forever
+			if last == '' and proc.poll() is not None:
+				break
+			while last not in newlines:
+				# Don't loop forever
+				if last == '' and proc.poll() is not None:
+					break
+				out.append(last)
+				last = stream.read(1)
+			out = ''.join(out)
+			yield out
 
 class BupWorker:
 	def __init__(self, bup_dir=None):
@@ -16,6 +35,7 @@ class BupWorker:
 
 		if bup_dir is not None:
 			self.set_dir(bup_dir)
+
 		os.environ['BUP_MAIN_EXE'] = 'bup'
 
 	def set_dir(self, bup_dir):
@@ -26,45 +46,58 @@ class BupWorker:
 		return git.init_repo()
 
 	def index(self, dirpath, opts={}, callbacks={}):
-		#return self.run(['index', '-u', dirpath], onread, onread, onclose)
-		call_index(dirpath, opts, callbacks)
+		args = ['index', '-u', dirpath]
+		if 'exclude_paths' in opts:
+			for excluded in opts['exclude_paths']:
+				args.append('--exclude', excluded)
+		if 'exclude_rxs' in opts:
+			for excluded in opts['exclude_rxs']:
+				args.append('--exclude-rx', excluded)
+		if 'one_file_system' in opts and opts['one_file_system']:
+			args.append('--one-file-system')
+
+		return self.run(args, callbacks)
 
 	def save(self, dirpath, opts={}, callbacks={}):
-		#return self.run(['save', '-n', name, dirpath], onread, onread, onclose)
-		call_save(dirpath, opts, callbacks)
+		args = ['save', '-n', opts['name'], dirpath]
+		return self.run(args, callbacks)
 
 	def fuse(self, mountPath, callbacks={}):
-		self.run(["fuse", mountPath], )
+		self.run(['fuse', mountPath], callbacks)
 
 	def run(self, args, callbacks={}):
-		env = {}
+		env = {'BUP_FORCE_TTY': '2'}
 		if self.dir is not None:
-			env = {"BUP_DIR": self.dir}
+			env = {'BUP_DIR': self.dir}
 
-		# start subprocess
-		args.insert(0, "bup")
-		proc = Popen(args, env=env, stdout=PIPE, stderr=PIPE)
+		if 'onprogress' in callbacks:
+			args += ['--format', 'json']
+			def onstderr(line):
+				progress = None
+				try:
+					progress = json.loads(line)
+				except ValueError, e:
+					return
+				callbacks['onprogress'](progress)
+			callbacks['stderr'] = onstderr
 
-		# read from subprocess
-		def read_data(source, condition, onread):
-			line = source.readline() # might block if no newline!
-			#line = source.read(1)
-			if not line:
-				source.close()
-				return False # stop reading
-			onread(line)
-			return True # continue reading
-		def read_stdout(source, condition):
-			return read_data(source, condition, callbacks["stdout"])
-		def read_stderr(source, condition):
-			return read_data(source, condition, callbacks["stderr"])
+		# Start subprocess
+		patched_cmd = os.path.dirname(__file__)+'/../cmd/'+args[0]+'-cmd.py'
+		if os.path.isfile(patched_cmd):
+			args[0] = patched_cmd
+			args.insert(0, sys.executable)
+		else:
+			args.insert(0, 'bup')
 
-		def closed(source, condition):
-			onclose(proc.poll())
+		proc = Popen(args, env=env, stdout=PIPE, stderr=PIPE,
+			universal_newlines=True)
 
-		if "stdout" in callbacks:
-			GObject.io_add_watch(proc.stdout, GObject.IO_IN, read_stdout)
 		if "stderr" in callbacks:
-			GObject.io_add_watch(proc.stderr, GObject.IO_IN, read_stderr)
+			for line in unbuffered(proc, 'stderr'):
+				callbacks["stderr"](line)
+		elif "stdout" in callbacks:
+			for line in unbuffered(proc, 'stdout'):
+				callbacks["stdout"](line)
+
 		if "onclose" in callbacks:
-			GObject.io_add_watch(proc.stdout, GObject.IO_HUP, callbacks["onclose"])
+			callbacks["onclose"](proc.poll())

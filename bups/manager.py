@@ -56,9 +56,9 @@ class BupManager:
 
 			self.bup.index(dirpath, {
 				"exclude_paths": excludePaths,
-				"exclude_rxs": excludeRxs
+				"exclude_rxs": excludeRxs,
+				"one_file_system": dir_data.get("onefilesystem", False)
 			}, {
-				"onread": lambda line: None,
 				"onprogress": onprogress
 			})
 

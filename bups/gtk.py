@@ -45,11 +45,13 @@ class BackupWindow(Gtk.Window):
 		fontdesc = Pango.FontDescription("monospace")
 		self.textview.modify_font(fontdesc)
 		self.textview.set_editable(False)
-		scroll = Gtk.ScrolledWindow()
-		scroll.add(self.textview)
+		sw = Gtk.ScrolledWindow()
+		sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+		sw.set_min_content_height(200)
+		sw.add(self.textview)
 		exp = Gtk.Expander()
 		exp.set_label(_("Details"))
-		exp.add(scroll)
+		exp.add(sw)
 		vbox.pack_start(exp, True, True, 0)
 
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
@@ -62,6 +64,8 @@ class BackupWindow(Gtk.Window):
 
 	def backup(self):
 		manager = self.manager
+
+		finished = False
 
 		def set_window_deletable(deletable):
 			self.set_deletable(deletable)
@@ -79,22 +83,34 @@ class BackupWindow(Gtk.Window):
 			GLib.idle_add(self.set_label, status)
 
 		def onprogress(progress, ctx):
+			if finished:
+				return
+
 			#print("PROGRESS", progress)
 			if "percentage" in progress:
-				GLib.idle_add(self.progressbar.set_fraction, progress["percentage"]/100)
+				if type(progress["percentage"]) == int or type(progress["percentage"]) == float:
+					GLib.idle_add(self.progressbar.set_fraction, progress["percentage"]/100)
+				else:
+					GLib.idle_add(self.progressbar.pulse)
 
 			lbl = _("Backing up {name}: ").format(name=ctx["name"])
-			if progress["type"] == "index":
+
+			if not "status" in progress:
+				return
+
+			if progress["status"] == "indexing":
 				lbl += _("indexing files")
-			elif progress["type"] == "save":
+			elif progress["status"] == "saving":
 				lbl += _("saving files")
-			elif progress["type"] == "read_index":
+			elif progress["status"] == "reading_index":
 				lbl += _("reading indexes")
 			else:
 				return
-			lbl += " "
+
+			lbl += " ("
+
 			if "files_done" in progress:
-				lbl += "("+str(progress["files_done"])
+				lbl += str(progress["files_done"])
 				if "files_total" in progress:
 					lbl += "/"+str(progress["files_total"])
 				lbl += " files"
@@ -104,9 +120,19 @@ class BackupWindow(Gtk.Window):
 				lbl += ", "+_("{remaining_time} remaining").format(remaining_time=progress["remaining_time"])
 			if "speed" in progress and progress["speed"]:
 				lbl += ", "+progress["speed"]
-			lbl += ")..."
+			if progress["status"] == "indexing":
+				if "paths_per_sec" in progress:
+					lbl += str(int(progress["paths_per_sec"]))+" paths/s"
+				if "total_paths" in progress:
+					lbl += ", "+str(progress["total_paths"])+" paths indexed"
 
-			GLib.idle_add(self.set_label, lbl, False)
+			if lbl[-1] == "(":
+				lbl = lbl[:-2]
+			else:
+				lbl += ")"
+			lbl += "..."
+
+			GLib.idle_add(self.set_label, lbl, True)
 
 		def onerror(err, ctx):
 			GLib.idle_add(self.append_log, err)
@@ -114,6 +140,7 @@ class BackupWindow(Gtk.Window):
 		def onfinish(data, ctx):
 			GLib.idle_add(set_window_deletable, True)
 			GLib.idle_add(self.progressbar.set_fraction, 1)
+			finished = True
 
 		def onabord():
 			GLib.idle_add(set_window_deletable, True)
