@@ -106,7 +106,9 @@ class BupManager:
 		cfg = self.config
 
 		callbacks["onstatus"]("Mounting filesystem...")
-		if not self.bupMount(callbacks):
+		if not self.bupMount({
+			'onerror': lambda msg, ctx: callbacks["onerror"](msg)
+		}):
 			callbacks["onabord"]()
 			return
 
@@ -150,7 +152,9 @@ class BupManager:
 		os.rmdir(self.fuseMountPath)
 
 		callbacks["onstatus"]("Unmounting filesystem...")
-		self.bupUnmount(callbacks)
+		self.bupUnmount({
+			'onerror': lambda msg, ctx: callbacks["onerror"](msg)
+		})
 
 		self.mounted = False
 		callbacks["onfinish"]({})

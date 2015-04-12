@@ -68,7 +68,7 @@ class BupWorker:
 	def run(self, args, callbacks={}):
 		env = {'BUP_FORCE_TTY': '2'}
 		if self.dir is not None:
-			env = {'BUP_DIR': self.dir}
+			env['BUP_DIR'] = self.dir
 
 		if 'onprogress' in callbacks:
 			args += ['--format', 'json']
@@ -77,20 +77,20 @@ class BupWorker:
 				try:
 					progress = json.loads(line)
 				except ValueError, e:
+					print(line)
 					return
 				callbacks['onprogress'](progress)
 			callbacks['stderr'] = onstderr
 
 		# Start subprocess
-		patched_cmd = os.path.dirname(__file__)+'/../cmd/'+args[0]+'-cmd.py'
+		patched_cmd = os.path.dirname(__file__)+'/cmd/'+args[0]+'-cmd.py'
 		if os.path.isfile(patched_cmd):
 			args[0] = patched_cmd
 			args.insert(0, sys.executable)
 		else:
 			args.insert(0, 'bup')
 
-		proc = Popen(args, env=env, stdout=PIPE, stderr=PIPE,
-			universal_newlines=True)
+		proc = Popen(args, env=env, stdout=None, stderr=PIPE, universal_newlines=True)
 
 		if "stderr" in callbacks:
 			for line in unbuffered(proc, 'stderr'):

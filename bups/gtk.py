@@ -132,7 +132,7 @@ class BackupWindow(Gtk.Window):
 				lbl += ")"
 			lbl += "..."
 
-			GLib.idle_add(self.set_label, lbl, True)
+			GLib.idle_add(self.set_label, lbl, False)
 
 		def onerror(err, ctx):
 			GLib.idle_add(self.append_log, err)
