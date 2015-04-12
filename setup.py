@@ -21,7 +21,7 @@ setup(
 	description="Simple GUI for Bup, a very efficient backup system.",
 	license="MIT",
 
-	packages=["bups", "bups.worker", "bups.scheduler"],
+	packages=["bups", "bups.cmd", "bups.scheduler"],
 	package_dir={"bups": "bups"},
 	package_data={"bups": ["config/*.json", "VERSION"]},
 	data_files=[
