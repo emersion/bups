@@ -7,7 +7,6 @@ import os
 from subprocess import PIPE, Popen, call
 import contextlib
 import json
-from bup import git
  
 # Unix, Windows and old Macintosh end-of-line
 newlines = ['\n', '\r\n', '\r']
@@ -42,8 +41,9 @@ class BupWorker:
 		self.dir = bup_dir
 		os.environ['BUP_DIR'] = bup_dir
 
-	def init(self):
-		return git.init_repo()
+	def init(self, callbacks={}):
+		args = ['init']
+		return self.run(args, callbacks)
 
 	def index(self, dirpath, opts={}, callbacks={}):
 		args = ['index', '-u', dirpath]
@@ -70,28 +70,31 @@ class BupWorker:
 		if self.dir is not None:
 			env['BUP_DIR'] = self.dir
 
-		if 'onprogress' in callbacks:
-			args += ['--format', 'json']
-			def onstderr(line):
-				progress = None
-				try:
-					progress = json.loads(line)
-				except ValueError, e:
-					if 'onstatus' in callbacks:
-						callbacks['onstatus'](line)
-					else:
-						print(line)
-					return
-				callbacks['onprogress'](progress)
-			callbacks['stderr'] = onstderr
-
 		# Start subprocess
 		patched_cmd = os.path.dirname(__file__)+'/cmd/'+args[0]+'-cmd.py'
 		if os.path.isfile(patched_cmd):
 			args[0] = patched_cmd
 			args.insert(0, sys.executable)
+
+			if 'onprogress' in callbacks:
+				args += ['--format', 'json']
+				def onstderr(line):
+					progress = None
+					try:
+						progress = json.loads(line)
+					except ValueError, e:
+						if 'onstatus' in callbacks:
+							callbacks['onstatus'](line)
+						else:
+							print(line)
+						return
+					callbacks['onprogress'](progress)
+				callbacks['stderr'] = onstderr
 		else:
 			args.insert(0, 'bup')
+
+			if 'onstatus' in callbacks:
+				callbacks['stderr'] = callbacks['onstatus']
 
 		proc = Popen(args, env=env, stdout=None, stderr=PIPE, universal_newlines=True)
 

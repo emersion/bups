@@ -83,10 +83,10 @@ class BupManager:
 			return
 
 		callbacks["onstatus"]("Initializing bup...", ctx)
-		try:
-			self.bup.init()
-		except Exception, e:
-			callbacks["onerror"]("WARN: "+str(e)+"\n", ctx)
+
+		self.bup.init({
+			"onstatus": lambda line: callbacks["onstatus"](line, ctx)
+		})
 
 		for dir_data in cfg["dirs"]:
 			backupDir(dir_data)
