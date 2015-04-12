@@ -51,6 +51,8 @@ class BupManager:
 
 			def onprogress(data):
 				return callbacks["onprogress"](data, ctx)
+			def onstatus(line):
+				return callbacks["onstatus"](line, ctx)
 
 			callbacks["onstatus"]("Backing up "+backupName+": indexing files...", ctx)
 
@@ -59,7 +61,8 @@ class BupManager:
 				"exclude_rxs": excludeRxs,
 				"one_file_system": dir_data.get("onefilesystem", False)
 			}, {
-				"onprogress": onprogress
+				"onprogress": onprogress,
+				"onstatus": onstatus
 			})
 
 			callbacks["onstatus"]("Backing up "+backupName+": saving files...", ctx)
@@ -68,7 +71,8 @@ class BupManager:
 				"name": backupName,
 				"progress": True
 			}, {
-				"onprogress": onprogress
+				"onprogress": onprogress,
+				"onstatus": onstatus
 			})
 
 		cfg = self.config

@@ -77,7 +77,10 @@ class BupWorker:
 				try:
 					progress = json.loads(line)
 				except ValueError, e:
-					print(line)
+					if 'onstatus' in callbacks:
+						callbacks['onstatus'](line)
+					else:
+						print(line)
 					return
 				callbacks['onprogress'](progress)
 			callbacks['stderr'] = onstderr

@@ -119,7 +119,7 @@ class BackupWindow(Gtk.Window):
 			if "remaining_time" in progress and progress["remaining_time"]:
 				lbl += ", "+_("{remaining_time} remaining").format(remaining_time=progress["remaining_time"])
 			if "speed" in progress and progress["speed"]:
-				lbl += ", "+progress["speed"]
+				lbl += ", "+str(progress["speed"])
 			if progress["status"] == "indexing":
 				if "paths_per_sec" in progress:
 					lbl += str(int(progress["paths_per_sec"]))+" paths/s"
