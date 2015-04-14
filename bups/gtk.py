@@ -113,18 +113,18 @@ class BackupWindow(Gtk.Window):
 				lbl += str(progress["files_done"])
 				if "files_total" in progress:
 					lbl += "/"+str(progress["files_total"])
-				lbl += " files"
+				lbl += " "+_("files")
 			if "bytes_done" in progress:
-				lbl += ", "+str(int(progress["bytes_done"]/1024))+"/"+str(int(progress["bytes_total"]/1024))+"k"
+				lbl += ", "+str(int(progress["bytes_done"]/1024))+"/"+str(int(progress["bytes_total"]/1024))+" "+_("KiB")
 			if "remaining_time" in progress and progress["remaining_time"]:
 				lbl += ", "+_("{remaining_time} remaining").format(remaining_time=progress["remaining_time"])
 			if "speed" in progress and progress["speed"]:
-				lbl += ", "+str(progress["speed"])
+				lbl += ", "+str(progress["speed"])+" "+_("KiB/s")
 			if progress["status"] == "indexing":
 				if "paths_per_sec" in progress:
-					lbl += str(int(progress["paths_per_sec"]))+" paths/s"
+					lbl += str(int(progress["paths_per_sec"]))+" "+_("paths/s")
 				if "total_paths" in progress:
-					lbl += ", "+str(progress["total_paths"])+" paths indexed"
+					lbl += ", "+str(progress["total_paths"])+" "+_("paths indexed")
 
 			if lbl[-1] == "(":
 				lbl = lbl[:-2]
