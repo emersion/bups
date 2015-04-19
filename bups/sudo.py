@@ -49,7 +49,7 @@ class Worker:
 
 	def start(self):
 		dirname = os.path.realpath(os.path.dirname(__file__))
-		cmd = dirname+"/sudo_worker.py "+config.file_path()
+		cmd = "python2 "+dirname+"/sudo_worker.py "+config.file_path()
 		self.proc = subprocess.Popen(get_sudo(cmd), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 	def send_command(self, cmd):

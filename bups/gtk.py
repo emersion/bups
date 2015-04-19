@@ -439,7 +439,7 @@ class SettingsWindow(Gtk.Window):
 
 		dirname = os.path.realpath(os.path.dirname(__file__))
 		logfile = dirname+"/scheduler-log.log"
-		cmd = dirname+"/scheduler_worker.py "+config.file_path()
+		cmd = "python2 "+dirname+"/scheduler_worker.py "+config.file_path()
 		cmd += " > "+logfile+" 2>&1"
 
 		cfg = {
