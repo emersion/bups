@@ -10,8 +10,9 @@ def noop(*args):
 	pass
 
 class BupManager:
-	def __init__(self, cfg):
+	def __init__(self, cfg, sudo_worker = None):
 		self.config = cfg
+		self.sudo_worker = sudo_worker
 
 		self.mountPath = tempfile.mkdtemp(prefix="bups-mnt-")
 		self.fuseMountPath = tempfile.mkdtemp(prefix="bups-fuse-")
@@ -91,6 +92,8 @@ class BupManager:
 		for dir_data in cfg["dirs"]:
 			backupDir(dir_data)
 
+		time.sleep(1)
+
 		callbacks["onstatus"]("Unmounting filesystem...", ctx)
 		self.bupUnmount(callbacks)
 
@@ -167,6 +170,12 @@ class BupManager:
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
 
+		if self.sudo_worker is not None:
+			res = self.sudo_worker.proxy_command("mount", callbacks)
+			if res["success"]:
+				self.bup.set_dir(res["bup_path"])
+			return res["success"]
+
 		cfg = self.config
 		if cfg["mount"]["type"] == "": # Nothing to mount
 			return True
@@ -192,6 +201,9 @@ class BupManager:
 	def bupUnmount(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
+
+		if self.sudo_worker is not None:
+			return self.sudo_worker.proxy_command("unmount", callbacks)["success"]
 
 		cfg = self.config
 		if cfg["mount"]["type"] == "": # Nothing to unmount

@@ -4,6 +4,7 @@ import pwd
 from subprocess import PIPE, Popen, call
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
 from manager import BupManager
+from sudo import Worker as SudoWorker
 from scheduler import schedulers
 from version import __version__
 import threading
@@ -438,7 +439,7 @@ class SettingsWindow(Gtk.Window):
 
 		dirname = os.path.realpath(os.path.dirname(__file__))
 		logfile = dirname+"/scheduler-log.log"
-		cmd = dirname+"/scheduler_worker.py"
+		cmd = dirname+"/scheduler_worker.py "+config.file_path()
 		cmd += " > "+logfile+" 2>&1"
 
 		cfg = {
@@ -610,7 +611,8 @@ class BupWindow(Gtk.ApplicationWindow):
 		for dirpath in self.config["dirs"]:
 			self.add_dir_ui(dirpath)
 
-		self.manager = BupManager(self.load_config())
+		sudo_worker = SudoWorker()
+		self.manager = BupManager(self.load_config(), sudo_worker)
 
 	def create_properties(self, outer):
 		sidebar_ctn = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
@@ -829,6 +831,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, _("Mounting filesystem..."))
 
 		def open_mounted(data):
+			print("Open dir:", data["path"])
 			call("xdg-open "+data["path"], shell=True)
 
 		def show_error(e):

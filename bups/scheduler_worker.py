@@ -4,7 +4,7 @@ import sys
 import config
 from manager import BupManager
 
-manager = BupManager(config.read())
+manager = BupManager(config.read(sys.argv[1]))
 
 def onstatus(status, ctx):
 	print(status)

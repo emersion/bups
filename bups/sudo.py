@@ -1,5 +1,7 @@
 import os
 import subprocess
+import json
+import config
 
 def command_exists(cmd):
 	devnull = open(os.devnull, 'wb')
@@ -40,3 +42,40 @@ class SudoQueue:
 
 	def reset(self):
 		self.queue = []
+
+class Worker:
+	def __init__(self):
+		self.proc = None
+
+	def start(self):
+		dirname = os.path.realpath(os.path.dirname(__file__))
+		cmd = dirname+"/sudo_worker.py "+config.file_path()
+		self.proc = subprocess.Popen(get_sudo(cmd), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+	def send_command(self, cmd):
+		if self.proc is None:
+			self.start()
+
+		print('Send command', cmd)
+		self.proc.stdin.write(cmd+"\n")
+		self.proc.stdin.flush()
+		json_res = self.proc.stdout.readline().strip()
+		print('Got response', json_res)
+
+		try:
+			res = json.loads(json_res)
+		except ValueError, e:
+			res = {
+				"success": False,
+				"output": json_res
+			}
+
+		return res
+
+	def proxy_command(self, cmd, callbacks):
+		res = self.send_command(cmd)
+
+		if res["output"] != "":
+			callbacks["onerror"](res["output"], {})
+
+		return res
