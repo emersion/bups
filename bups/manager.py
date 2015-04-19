@@ -217,3 +217,4 @@ class BupManager:
 			return False
 
 		os.rmdir(self.mountPath)
+		return True

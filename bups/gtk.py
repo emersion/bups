@@ -143,7 +143,7 @@ class BackupWindow(Gtk.Window):
 			GLib.idle_add(self.progressbar.set_fraction, 1)
 			finished = True
 
-		def onabord():
+		def onabord(data, ctx):
 			GLib.idle_add(set_window_deletable, True)
 			GLib.idle_add(self.set_label, _("Backup canceled."), False)
 

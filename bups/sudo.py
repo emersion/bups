@@ -53,7 +53,8 @@ class Worker:
 		self.proc = subprocess.Popen(get_sudo(cmd), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 	def send_command(self, cmd):
-		if self.proc is None:
+		if self.proc is None or self.proc.returncode is not None:
+			# Process has not started/has terminated
 			self.start()
 
 		print('Send command', cmd)
