@@ -18,17 +18,9 @@ class BupManager:
 		self.config = cfg
 		self.sudo_worker = sudo_worker
 
-		self.mountPath = tempfile.mkdtemp(prefix="bups-mnt-")
-		self.fuseMountPath = tempfile.mkdtemp(prefix="bups-fuse-")
-
-		self.bupPath = self.mountPath
-		if cfg["mount"].get("path", "") != "":
-			self.bupPath = os.path.join(self.bupPath, cfg["mount"]["path"])
-
 		self.mounted = False
 
 		self.bup = BupWorker()
-
 		self.bup_mounter = None
 
 		# FS parents
@@ -98,7 +90,7 @@ class BupManager:
 		cfg = self.config
 
 		callbacks["onstatus"]("Mounting filesystem...", ctx)
-		if not self.bupMount(callbacks):
+		if not self.mount_parents(callbacks):
 			callbacks["onabord"]({}, ctx)
 			return
 
@@ -114,7 +106,7 @@ class BupManager:
 		time.sleep(1)
 
 		callbacks["onstatus"]("Unmounting filesystem...", ctx)
-		self.bupUnmount(callbacks)
+		self.unmount_parents(callbacks)
 
 		callbacks["onstatus"]('Backup finished.', ctx)
 		callbacks["onfinish"]({}, ctx)
