@@ -41,6 +41,9 @@ class BupWorker:
 		self.dir = bup_dir
 		os.environ['BUP_DIR'] = bup_dir
 
+	def get_dir(self):
+		return self.dir
+
 	def init(self, callbacks={}):
 		args = ['init']
 		return self.run(args, callbacks)

@@ -228,8 +228,8 @@ class SettingsWindow(Gtk.Window):
 		vbox.add(hbox)
 		label = Gtk.Label(_("Filesystem type"), xalign=0)
 
-		mount_types = ["", "cifs"]
-		mount_types_names = [_("Local"), _("SAMBA")]
+		mount_types = ["", "cifs", "google_drive"]
+		mount_types_names = [_("Local"), _("SAMBA"), _("Google Drive")]
 		mount_type_store = Gtk.ListStore(str, str)
 		i = 0
 		for t in mount_types:
@@ -294,6 +294,13 @@ class SettingsWindow(Gtk.Window):
 
 			self.samba_host_entry.set_text(host)
 			self.samba_share_entry.set_text(share)
+
+		# Encrypt filesystem?
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		self.encrypt_check = Gtk.CheckButton(_("Encrypt filesystem"))
+		self.encrypt_check.set_active(self.cfg["mount"].get("encrypt", False))
+		hbox.add(self.encrypt_check)
 
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		vbox.set_border_width(10)
@@ -412,6 +419,7 @@ class SettingsWindow(Gtk.Window):
 	def get_config(self):
 		self.cfg["mount"]["type"] = self.get_mount_type()
 		self.cfg["mount"]["path"] = self.path_prefix_entry.get_text()
+		self.cfg["mount"]["encrypt"] = self.encrypt_check.get_active()
 
 		if self.cfg["mount"]["type"] == "cifs": # Samba
 			self.cfg["mount"]["target"] = "//"+self.samba_host_entry.get_text()+"/"+self.samba_share_entry.get_text()

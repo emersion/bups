@@ -4,7 +4,11 @@ import subprocess
 import tempfile
 
 from worker import BupWorker
-from sudo import sudo
+#from sudo import sudo
+from fuse.root import FuseRoot
+from fuse.bup import FuseBup
+from fuse.google_drive import FuseGoogleDrive
+from fuse.encfs import FuseEncfs
 
 def noop(*args):
 	pass
@@ -18,12 +22,27 @@ class BupManager:
 		self.fuseMountPath = tempfile.mkdtemp(prefix="bups-fuse-")
 
 		self.bupPath = self.mountPath
-		if "path" in cfg["mount"] and cfg["mount"]["path"]:
+		if cfg["mount"].get("path", "") != "":
 			self.bupPath = os.path.join(self.bupPath, cfg["mount"]["path"])
 
 		self.mounted = False
 
 		self.bup = BupWorker()
+
+		self.bup_mounter = None
+
+		# FS parents
+		mount_cfg = self.config["mount"]
+		mount_type = mount_cfg.get("type", "")
+		if mount_type == "":
+			self.parents = []
+		elif mount_type == "google_drive":
+			self.parents = [FuseGoogleDrive(mount_cfg)]
+		else:
+			self.parents = [FuseRoot(mount_cfg)]
+
+		if mount_cfg.get("encrypt", False):
+			self.parents.append(FuseEncfs())
 
 	def backup(self, callbacks={}):
 		if not "onstatus" in callbacks:
@@ -113,32 +132,27 @@ class BupManager:
 		cfg = self.config
 
 		callbacks["onstatus"]("Mounting filesystem...")
-		if not self.bupMount({
+		if not self.mount_parents({
 			'onerror': lambda msg, ctx: callbacks["onerror"](msg)
 		}):
 			callbacks["onabord"]()
 			return
 
 		callbacks["onstatus"]("Initializing bup...")
+
+		mounter = FuseBup(self.bup)
+		mount_path = tempfile.mkdtemp(prefix="bups-bup-")
 		try:
-			self.bup.init()
+			mounter.mount(mount_path)
 		except Exception, e:
 			callbacks["onerror"]("WARN: "+str(e)+"\n")
 
-		if not os.path.exists(self.fuseMountPath):
-			os.makedirs(self.fuseMountPath)
-
-		self.bup.fuse(self.fuseMountPath, {
-			"stdout": callbacks["onstatus"],
-			"stderr": callbacks["onstatus"]
-		})
-
-		time.sleep(1)
+		self.bup_mounter = mounter
 
 		callbacks["onstatus"]('Bup fuse filesystem mounted.')
 		self.mounted = True
 		callbacks["onready"]({
-			"path": self.fuseMountPath
+			"path": mounter.get_inner_path()
 		})
 
 	def unmount(self, callbacks={}):
@@ -149,72 +163,56 @@ class BupManager:
 		if not "onfinish" in callbacks:
 			callbacks["onfinish"] = noop
 
-		callbacks["onstatus"]("Unmounting fuse filesystem...")
-		res = subprocess.call(["fusermount -u "+self.fuseMountPath], shell=True)
-		if res != 0:
-			pass
+		if self.bup_mounter is None:
+			return
 
-		time.sleep(1)
-
-		os.rmdir(self.fuseMountPath)
+		callbacks["onstatus"]("Unmounting bup filesystem...")
+		try:
+			self.bup_mounter.unmount()
+		except Exception, e:
+			callbacks["onerror"]("WARN: "+str(e)+"\n")
 
 		callbacks["onstatus"]("Unmounting filesystem...")
-		self.bupUnmount({
+		self.unmount_parents({
 			'onerror': lambda msg, ctx: callbacks["onerror"](msg)
 		})
 
 		self.mounted = False
 		callbacks["onfinish"]({})
 
-	def bupMount(self, callbacks={}):
+	def parents_need_sudo(self):
+		for mounter in self.parents:
+			if isinstance(mounter, FuseRoot):
+				return True
+		return False
+
+	def mount_parents(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
 
-		if self.sudo_worker is not None:
+		if self.parents_need_sudo() and self.sudo_worker is not None:
 			res = self.sudo_worker.proxy_command("mount", callbacks)
 			if res["success"]:
 				self.bup.set_dir(res["bup_path"])
 			return res["success"]
 
-		cfg = self.config
-		if cfg["mount"]["type"] == "": # Nothing to mount
-			return True
+		last_mount_path = None
+		for mounter in self.parents:
+			mount_path = tempfile.mkdtemp(prefix="bups-"+mounter.get_type()+"-")
+			mounter.mount(mount_path, last_mount_path)
+			last_mount_path = mounter.get_inner_path()
 
-		if not os.path.exists(self.mountPath):
-			os.makedirs(self.mountPath)
-
-		if os.path.ismount(self.mountPath):
-			callbacks["onerror"]("WARN: filesystem already mounted", {})
-		else:
-			cmd = "mount -t "+cfg["mount"]["type"]+" "+cfg["mount"]["target"]+" "+self.mountPath+" -o "+cfg["mount"]["options"]
-			res = sudo(cmd)
-			if res == 32:
-				callbacks["onerror"]("WARN: filesystem busy", {})
-			elif res != 0:
-				callbacks["onerror"]("ERR: Could not mount samba [#"+str(res)+"] (command: "+args+")", {})
-				return False
-
-		self.bup.set_dir(self.bupPath)
-
+		self.bup.set_dir(last_mount_path)
 		return True
 
-	def bupUnmount(self, callbacks={}):
+	def unmount_parents(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
 
-		if self.sudo_worker is not None:
+		if self.parents_need_sudo() and self.sudo_worker is not None:
 			return self.sudo_worker.proxy_command("unmount", callbacks)["success"]
 
-		cfg = self.config
-		if cfg["mount"]["type"] == "": # Nothing to unmount
-			os.rmdir(self.mountPath)
-			return True
+		for mounter in reversed(self.parents):
+			mounter.unmount()
 
-		cmd = "umount "+self.mountPath
-		res = sudo(cmd)
-		if res != 0:
-			callbacks["onerror"]("WARN: could not unmount samba filesystem ["+str(res)+"]", {})
-			return False
-
-		os.rmdir(self.mountPath)
 		return True

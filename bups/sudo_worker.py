@@ -2,8 +2,8 @@
 
 import sys
 import config
-from manager import BupManager
 import json
+from manager import BupManager
 
 manager = BupManager(config.read(sys.argv[1]))
 
@@ -28,10 +28,10 @@ while True:
 	if cmd == 'quit':
 		sys.exit()
 	if cmd == 'mount':
-		res["success"] = manager.bupMount(callbacks)
-		res["bup_path"] = manager.bupPath
+		res["success"] = manager.mount_parents(callbacks)
+		res["bup_path"] = manager.bup.get_dir()
 	if cmd == 'unmount':
-		res["success"] = manager.bupUnmount(callbacks)
+		res["success"] = manager.unmount_parents(callbacks)
 
 	sys.stdout.write(json.dumps(res)+"\n")
 	sys.stdout.flush()
