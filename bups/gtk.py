@@ -165,7 +165,7 @@ class BackupWindow(Gtk.Window):
 				return manager.backup(callbacks)
 			except Exception, e:
 				callbacks["onerror"](traceback.format_exc(), {})
-				callbacks["onabord"]()
+				callbacks["onabord"]({}, {})
 
 		t = threading.Thread(target=do_backup, args=(manager, callbacks))
 		t.start()
@@ -675,6 +675,8 @@ class BupWindow(Gtk.ApplicationWindow):
 	def get_selected_row_index(self):
 		selection = self.treeview.get_selection()
 		model, treeiter = selection.get_selected()
+		if treeiter is None:
+			return None
 		path = model[treeiter].path
 		index = path.get_indices()[0]
 
@@ -695,6 +697,8 @@ class BupWindow(Gtk.ApplicationWindow):
 
 	def update_sidebar(self):
 		index = self.get_selected_row_index()
+		if index is None:
+			return
 		cfg = self.config["dirs"][index]
 
 		self.sidebar_name_entry.set_text(cfg["name"])
@@ -717,14 +721,20 @@ class BupWindow(Gtk.ApplicationWindow):
 			self.update_sidebar()
 
 	def on_properties_clicked(self, btn):
+		index = self.get_selected_row_index()
+		is_row_selected = (index is not None)
+
 		if hasattr(Gtk, "Revealer") and type(self.sidebar) == Gtk.Revealer:
-			if not self.sidebar_btn.get_active():
+			if not self.sidebar_btn.get_active() or not is_row_selected:
 				self.hide_sidebar()
 				return
 
 			self.update_sidebar()
 			self.show_sidebar()
 		else:
+			if not is_row_selected:
+				return
+
 			self.sidebar = Gtk.Window(title=_("Properties"))
 			self.sidebar.set_position(Gtk.WindowPosition.CENTER)
 			self.sidebar.set_transient_for(self)

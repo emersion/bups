@@ -188,10 +188,14 @@ class BupManager:
 				self.bup.set_dir(res["bup_path"])
 			return res["success"]
 
-		last_mount_path = None
+		last_mount_path = self.bup.get_default_dir()
 		for mounter in self.parents:
 			mount_path = tempfile.mkdtemp(prefix="bups-"+mounter.get_type()+"-")
-			mounter.mount(mount_path, last_mount_path)
+			try:
+				mounter.mount(mount_path, last_mount_path)
+			except Exception, e:
+				callbacks["onerror"]("ERR: "+str(e)+"\n", {})
+				return False
 			last_mount_path = mounter.get_inner_path()
 
 		self.bup.set_dir(last_mount_path)
@@ -205,6 +209,10 @@ class BupManager:
 			return self.sudo_worker.proxy_command("unmount", callbacks)["success"]
 
 		for mounter in reversed(self.parents):
-			mounter.unmount()
+			try:
+				mounter.unmount()
+			except Exception, e:
+				callbacks["onerror"]("ERR: "+str(e)+"\n", {})
+				return False
 
 		return True

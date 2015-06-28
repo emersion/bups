@@ -37,6 +37,10 @@ class BupWorker:
 
 		os.environ['BUP_MAIN_EXE'] = 'bup'
 
+	def get_default_dir(self):
+		default_dir = os.path.expanduser('~/.bup')
+		return os.environ.get('BUP_DIR', default_dir)
+
 	def set_dir(self, bup_dir):
 		self.dir = bup_dir
 		os.environ['BUP_DIR'] = bup_dir
