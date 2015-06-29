@@ -639,7 +639,6 @@ class BupWindow(Gtk.ApplicationWindow):
 		if hasattr(Gtk, "HeaderBar"): # Use HeaderBar if available
 			hb = Gtk.HeaderBar(title="Bups")
 			hb.set_show_close_button(True)
-			hb.set_subtitle(_("Bup manager"))
 			self.set_titlebar(hb)
 
 			# Add/remove
