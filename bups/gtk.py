@@ -549,14 +549,14 @@ class SettingsWindow(Gtk.Window):
 
 	def show_all(self):
 		Gtk.Window.show_all(self)
-		self.on_mount_type_changed(self.mount_type_combo)
+		self.on_mount_type_changed()
 
 	def on_close_clicked(self, btn):
 		#self.response(Gtk.ResponseType.OK)
 		#win.connect("delete-event", win.quit)
 		self.hide()
 
-	def on_mount_type_changed(self, combo):
+	def on_mount_type_changed(self, combo=None):
 		mount_type = self.get_mount_type()
 
 		for t in self.mount_boxes:
@@ -567,6 +567,12 @@ class SettingsWindow(Gtk.Window):
 				box.hide()
 
 		self.resize(1, 1) # Make window as smaller as possible
+
+		if combo is not None: # Not init
+			if mount_type == "":
+				self.path_prefix_entry.set_text("~/.bup")
+			else:
+				self.path_prefix_entry.set_text("")
 
 	def get_mount_type(self):
 		mount_type_iter = self.mount_type_combo.get_active_iter()

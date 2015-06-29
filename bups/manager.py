@@ -208,7 +208,11 @@ class BupManager:
 				self.bup.set_dir(res["bup_path"])
 			return res["success"]
 
+		mount_cfg = self.config["mount"]
 		last_mount_path = self.bup.get_default_dir()
+		if mount_cfg.get("type", "") == "" and mount_cfg.get("path", "") != "":
+			last_mount_path = os.path.expanduser(mount_cfg["path"])
+
 		for mounter in self.parents:
 			mount_path = tempfile.mkdtemp(prefix="bups-"+mounter.get_type()+"-")
 			try:
