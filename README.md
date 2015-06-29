@@ -3,7 +3,7 @@ Bups
 
 Simple GUI for [Bup](https://github.com/bup/bup), a very efficient backup system.
 
-![Main window](https://cloud.githubusercontent.com/assets/506932/5603135/275a7ccc-9375-11e4-9aec-d4ae9ef97cd4.png)
+![Main window](https://cloud.githubusercontent.com/assets/506932/8412281/2b916e6e-1e89-11e5-9b78-dbb6c55367de.png)
 
 # Purposes
 
