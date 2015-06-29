@@ -187,6 +187,166 @@ class BackupWindow(Gtk.Window):
 	def on_close_clicked(self, btn):
 		self.destroy()
 
+class RestoreWindow(Gtk.Window):
+	def __init__(self, manager, parent):
+		Gtk.Window.__init__(self, title=_("Restore"))
+		self.set_border_width(10)
+		self.set_icon_name("view-refresh")
+		self.set_position(Gtk.WindowPosition.CENTER)
+		self.set_transient_for(parent)
+
+		cfg = parent.load_config()
+
+		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		self.add(vbox)
+
+		backups_store = Gtk.ListStore(str)
+		for d in cfg["dirs"]:
+			backups_store.append([d["name"]])
+
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		label = Gtk.Label(_("Backup name"), xalign=0)
+		self.backup_name_combo = Gtk.ComboBox.new_with_model_and_entry(backups_store)
+		self.backup_name_combo.set_entry_text_column(0)
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.backup_name_combo, False, True, 0)
+
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		label = Gtk.Label(_("Backup date"), xalign=0)
+		self.backup_date_entry = Gtk.Entry()
+		self.backup_date_entry.set_text("latest")
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.backup_date_entry, False, True, 0)
+
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		label = Gtk.Label(_("Backup path"), xalign=0)
+		self.backup_path_entry = Gtk.Entry()
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.backup_path_entry, False, True, 0)
+
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		vbox.add(hbox)
+		label = Gtk.Label(_("Destination"), xalign=0)
+		self.dest_folder_btn = Gtk.FileChooserButton.new(_("Choose a destination folder"), Gtk.FileChooserAction.SELECT_FOLDER)
+		self.dest_folder_btn.set_filename("/")
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.dest_folder_btn, False, True, 0)
+
+		hbox = Gtk.HButtonBox()
+		vbox.add(hbox)
+
+		button = Gtk.Button(_("Cancel"))
+		button.connect("clicked", self.on_close_clicked)
+		hbox.pack_end(button, False, False, 0)
+
+		button = Gtk.Button(_("Restore"))
+		if hasattr(Gtk, "STYLE_CLASS_SUGGESTED_ACTION"): # Since GTK 3.10
+			button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+		button.connect("clicked", self.on_restore_clicked)
+		hbox.pack_end(button, False, False, 0)
+
+		self.manager = manager
+
+	def restore(self):
+		manager = self.manager
+
+		backup_name = self.backup_name_combo.get_child().get_text()
+		backup_date = self.backup_date_entry.get_text()
+		backup_path = self.backup_path_entry.get_text()
+		if backup_name == "":
+			return
+		from_path = "/" + backup_name +  "/" + backup_date + "/" + backup_path
+		to_path = self.dest_folder_btn.get_filename()
+		if to_path is None:
+			to_path = "/"
+
+		progress_win = Gtk.Dialog(title=_("Restoring..."))
+		progress_win.set_default_size(150, 50)
+		progress_win.set_border_width(10)
+		progress_win.set_transient_for(self)
+		progress_win.set_modal(True)
+		progress_win.set_position(Gtk.WindowPosition.CENTER)
+
+		box = progress_win.get_content_area()
+
+		label = Gtk.Label(_("Ready."), xalign=0)
+		label.set_justify(Gtk.Justification.LEFT)
+		box.pack_start(label, False, False, 0)
+
+		progress_win.show_all()
+
+		def set_label(msg):
+			label.set_text(msg)
+
+		def close_progress_win(btn):
+			progress_win.destroy()
+
+		def add_close_btn():
+			hbox = Gtk.HButtonBox()
+			box.add(hbox)
+
+			button = Gtk.Button(_("Close"))
+			button.connect("clicked", close_progress_win)
+			hbox.pack_end(button, False, False, 0)
+
+			progress_win.show_all()
+			self.resize(1, 1) # Make window as small as possible
+
+			# Close restore window too
+			progress_win.connect("destroy", self.on_close_clicked)
+
+		has_error = False
+
+		def onstatus(status):
+			print(status)
+			if not has_error:
+				GLib.idle_add(set_label, status)
+
+		def onprogress(progress):
+			GLib.idle_add(set_label, _("Restoring, "+str(progress["files_done"])+" files done..."))
+
+		def onerror(err):
+			print(err) # TODO
+			has_error = True
+
+		def onfinish():
+			if not has_error:
+				GLib.idle_add(set_label, _("Restoration finished."))
+			GLib.idle_add(add_close_btn)
+
+		def onabord():
+			GLib.idle_add(add_close_btn)
+
+		callbacks = {
+			"onstatus": onstatus,
+			"onprogress": onprogress,
+			"onerror": onerror,
+			"onfinish": onfinish,
+			"onabord": onabord
+		}
+
+		def do_restore(manager, callbacks, from_path, to_path):
+			try:
+				return manager.restore({
+					"from": from_path,
+					"to": to_path
+				}, callbacks)
+			except Exception, e:
+				callbacks["onerror"](traceback.format_exc())
+				callbacks["onabord"]()
+
+		t = threading.Thread(target=do_restore, args=(manager, callbacks, from_path, to_path))
+		t.start()
+
+	def on_restore_clicked(self, btn):
+		self.restore()
+
+	def on_close_clicked(self, btn):
+		self.destroy()
+
 class SettingsWindow(Gtk.Window):
 	def __init__(self, parent):
 		Gtk.Window.__init__(self, title=_("Settings"))
@@ -859,7 +1019,8 @@ class BupWindow(Gtk.ApplicationWindow):
 		win.backup()
 
 	def on_restore_clicked(self, btn):
-		pass
+		win = RestoreWindow(self.manager, parent=self)
+		win.show_all()
 
 	def on_mount_clicked(self, btn):
 		dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, _("Mounting filesystem..."))

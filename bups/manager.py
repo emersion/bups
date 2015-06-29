@@ -37,16 +37,10 @@ class BupManager:
 			self.parents.append(FuseEncfs())
 
 	def backup(self, callbacks={}):
-		if not "onstatus" in callbacks:
-			callbacks["onstatus"] = noop
-		if not "onerror" in callbacks:
-			callbacks["onerror"] = noop
-		if not "onprogress" in callbacks:
-			callbacks["onprogress"] = noop
-		if not "onfinish" in callbacks:
-			callbacks["onfinish"] = noop
-		if not "onabord" in callbacks:
-			callbacks["onabord"] = noop
+		callbacks_names = ["onstatus", "onerror", "onprogress", "onfinish", "onabord"]
+		for name in callbacks_names:
+			if not name in callbacks:
+				callbacks[name] = noop
 
 		ctx = {}
 
@@ -110,6 +104,32 @@ class BupManager:
 
 		callbacks["onstatus"]('Backup finished.', ctx)
 		callbacks["onfinish"]({}, ctx)
+
+	def restore(self, opts, callbacks={}):
+		callbacks_names = ["onstatus", "onerror", "onprogress", "onfinish", "onabord"]
+		for name in callbacks_names:
+			if not name in callbacks:
+				callbacks[name] = noop
+
+		callbacks["onstatus"]("Mounting filesystem...")
+		if not self.mount_parents(callbacks):
+			callbacks["onabord"]()
+			return
+
+		from_path = opts.get("from").encode("ascii")
+		to_path = opts.get("to").encode("ascii")
+
+		callbacks["onstatus"]("Restoring "+from_path+" to "+to_path+"...")
+
+		self.bup.restore(from_path, to_path, callbacks)
+
+		time.sleep(1)
+
+		callbacks["onstatus"]("Unmounting filesystem...")
+		self.unmount_parents(callbacks)
+
+		callbacks["onstatus"]("Restoration finished.")
+		callbacks["onfinish"]()
 
 	def mount(self, callbacks={}):
 		if not "onstatus" in callbacks:

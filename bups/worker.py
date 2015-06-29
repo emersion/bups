@@ -104,7 +104,7 @@ class BupWorker:
 					callbacks['onprogress'](progress)
 				callbacks['stderr'] = onstderr
 		else:
-			args.insert(0, 'bup')
+			args.insert(0, os.environ['BUP_MAIN_EXE'])
 
 			if 'onstatus' in callbacks:
 				callbacks['stderr'] = callbacks['onstatus']
