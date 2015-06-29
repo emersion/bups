@@ -510,7 +510,7 @@ class BupWindow(Gtk.ApplicationWindow):
 
 			hb.pack_start(box)
 
-			# Backup/browse
+			# Backup/browse/restore
 			box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 			Gtk.StyleContext.add_class(box.get_style_context(), "linked")
 
@@ -520,6 +520,14 @@ class BupWindow(Gtk.ApplicationWindow):
 			button.add(image)
 			button.set_tooltip_text(_("Backup now"))
 			button.connect("clicked", self.on_backup_clicked)
+			box.add(button)
+
+			button = Gtk.Button()
+			icon = Gio.ThemedIcon(name="view-refresh-symbolic")
+			image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+			button.add(image)
+			button.set_tooltip_text(_("Restore a backup"))
+			button.connect("clicked", self.on_restore_clicked)
 			box.add(button)
 
 			button = Gtk.Button()
@@ -561,6 +569,11 @@ class BupWindow(Gtk.ApplicationWindow):
 			button = Gtk.ToolButton(Gtk.STOCK_HARDDISK)
 			button.set_tooltip_text(_("Backup now"))
 			button.connect("clicked", self.on_backup_clicked)
+			tb.add(button)
+
+			button = Gtk.ToolButton(Gtk.STOCK_REFRESH)
+			button.set_tooltip_text(_("Restore a backup"))
+			button.connect("clicked", self.on_restore_clicked)
 			tb.add(button)
 
 			button = Gtk.ToolButton(Gtk.STOCK_OPEN)
@@ -844,6 +857,9 @@ class BupWindow(Gtk.ApplicationWindow):
 		win.show_all()
 
 		win.backup()
+
+	def on_restore_clicked(self, btn):
+		pass
 
 	def on_mount_clicked(self, btn):
 		dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, 0, _("Mounting filesystem..."))

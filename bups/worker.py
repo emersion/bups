@@ -32,14 +32,17 @@ class BupWorker:
 	def __init__(self, bup_dir=None):
 		self.dir = None
 
+		# Save default dir now, otherwise BUP_DIR will be overwritten in the future
+		self.default_dir = os.environ.get('BUP_DIR', os.path.expanduser('~/.bup'))
+
+		# Set bup exe
+		os.environ['BUP_MAIN_EXE'] = os.environ.get('BUP_MAIN_EXE', 'bup')
+
 		if bup_dir is not None:
 			self.set_dir(bup_dir)
 
-		os.environ['BUP_MAIN_EXE'] = 'bup'
-
 	def get_default_dir(self):
-		default_dir = os.path.expanduser('~/.bup')
-		return os.environ.get('BUP_DIR', default_dir)
+		return self.default_dir
 
 	def set_dir(self, bup_dir):
 		self.dir = bup_dir
@@ -69,8 +72,11 @@ class BupWorker:
 		args = ['save', '-n', opts['name'], dirpath]
 		return self.run(args, callbacks)
 
-	def fuse(self, mountPath, callbacks={}):
-		self.run(['fuse', mountPath], callbacks)
+	def fuse(self, mount_path, callbacks={}):
+		self.run(['fuse', mount_path], callbacks)
+
+	def restore(self, from_path, to_path, callbacks={}):
+		self.run(['restore', '-C', to_path, from_path], callbacks)
 
 	def run(self, args, callbacks={}):
 		env = {'BUP_FORCE_TTY': '2'}
