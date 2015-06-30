@@ -13,9 +13,10 @@ Features:
 * Multiple directories support
 * Backup, with a nice progressbar
 * Show current backups in your favorite file manager
-* Backups on local filesystem or over Samba
+* Backups on local filesystem or over Samba, SSH and Google Drive
 * Backup scheduling (using `systemd` or `anacron`)
 * Exclude paths/patterns
+* Restore backups
 
 # How to use
 
@@ -27,7 +28,7 @@ Installation:
 * Otherwise, you can install Bups from PyPI: https://pypi.python.org/pypi/Bups
 * You can also download the source (not recommended): https://github.com/emersion/bups/archive/master.zip
 
-After installation, you can start Bups by running `bups`. A launcher will also be added to your desktop's app menu.
+When installed, you can start Bups by running `bups`. A launcher will also be added to your desktop's app menu.
 
 If you downloaded the source, run `bin/bups`.
 
