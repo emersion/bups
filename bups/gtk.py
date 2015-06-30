@@ -1,6 +1,5 @@
 import sys
 import os
-import pwd
 from subprocess import PIPE, Popen, call
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
 from manager import BupManager
@@ -11,6 +10,7 @@ import threading
 import config
 import traceback
 import gettext
+import getpass
 
 GObject.threads_init() # Important: enable multi-threading support in GLib
 
@@ -1004,12 +1004,9 @@ class BupWindow(Gtk.ApplicationWindow):
 			self.on_sidebar_cancel(None)
 
 	def get_default_backup_name(self, dirpath):
-		login = ''
-		try:
-			login = os.getlogin()
-		except OSError:
-			login = pwd.getpwuid(os.getuid())[0]
-		return login+"-"+os.path.basename(dirpath).lower()
+		login = getpass.getuser()
+		dirname = os.path.basename(dirpath).lower()
+		return login+"-"+dirname
 
 	def normalize_dir(self, dir_data):
 		if type(dir_data) == str or type(dir_data) == unicode:
