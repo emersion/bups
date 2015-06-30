@@ -13,7 +13,7 @@ Features:
 * Multiple directories support
 * Backup, with a nice progressbar
 * Show current backups in your favorite file manager
-* Backups on local filesystem or over Samba, SSH and Google Drive
+* Backups on local filesystem or over Samba, SSH and [Google Drive](https://github.com/astrada/google-drive-ocamlfuse)
 * Backup scheduling (using `systemd` or `anacron`)
 * Exclude paths/patterns
 * Restore backups
