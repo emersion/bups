@@ -18,6 +18,8 @@ Features:
 * Exclude paths/patterns
 * Restore backups
 
+Changelog: https://github.com/emersion/bups/releases
+
 # How to use
 
 Requires Python 2, GTK 3 and Bup. Tested on Archlinux and Elementary OS (so it should run on Ubuntu and Debian).
