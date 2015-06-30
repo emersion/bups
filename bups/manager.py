@@ -7,6 +7,7 @@ from worker import BupWorker
 #from sudo import sudo
 from fuse.root import FuseRoot
 from fuse.bup import FuseBup
+from fuse.sshfs import FuseSshfs
 from fuse.google_drive import FuseGoogleDrive
 from fuse.encfs import FuseEncfs
 
@@ -30,6 +31,8 @@ class BupManager:
 			self.parents = []
 		elif mount_type == "google_drive":
 			self.parents = [FuseGoogleDrive(mount_cfg)]
+		elif mount_type == "sshfs":
+			self.parents = [FuseSshfs(mount_cfg)]
 		else:
 			self.parents = [FuseRoot(mount_cfg)]
 
@@ -198,6 +201,11 @@ class BupManager:
 				return True
 		return False
 
+	def mount_log(self, msg):
+		if self.sudo_worker is not None:
+			return
+		print(msg)
+
 	def mount_parents(self, callbacks={}):
 		if not "onerror" in callbacks:
 			callbacks["onerror"] = noop
@@ -215,12 +223,17 @@ class BupManager:
 
 		for mounter in self.parents:
 			mount_path = tempfile.mkdtemp(prefix="bups-"+mounter.get_type()+"-")
+
+			self.mount_log("Mounting "+mounter.get_type()+" on "+mount_path)
+
 			try:
 				mounter.mount(mount_path, last_mount_path)
 			except Exception, e:
 				callbacks["onerror"]("ERR: "+str(e)+"\n", {})
 				return False
 			last_mount_path = mounter.get_inner_path()
+
+		self.mount_log("Backup dir is "+last_mount_path)
 
 		self.bup.set_dir(last_mount_path)
 		return True
@@ -233,6 +246,8 @@ class BupManager:
 			return self.sudo_worker.proxy_command("unmount", callbacks)["success"]
 
 		for mounter in reversed(self.parents):
+			self.mount_log("Unmounting "+mounter.get_type()+" on "+mounter.get_mount_path())
+
 			try:
 				mounter.unmount()
 			except Exception, e:

@@ -52,8 +52,7 @@ class BupWorker:
 		return self.dir
 
 	def init(self, callbacks={}):
-		args = ['init']
-		return self.run(args, callbacks)
+		return self.run(['init'], callbacks)
 
 	def index(self, dirpath, opts={}, callbacks={}):
 		args = ['index', '-u', dirpath]

@@ -351,6 +351,7 @@ class SettingsWindow(Gtk.Window):
 	def __init__(self, parent):
 		Gtk.Window.__init__(self, title=_("Settings"))
 		self.set_default_size(150, 100)
+		self.set_border_width(10)
 		self.set_transient_for(parent)
 		self.set_modal(True)
 		self.set_icon_name("drive-harddisk")
@@ -377,7 +378,6 @@ class SettingsWindow(Gtk.Window):
 			box.add(nb)
 
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-		vbox.set_border_width(10)
 		if stack is not None:
 			stack.add_titled(vbox, "destination", _("Destination"))
 		else:
@@ -388,8 +388,8 @@ class SettingsWindow(Gtk.Window):
 		vbox.add(hbox)
 		label = Gtk.Label(_("Filesystem type"), xalign=0)
 
-		mount_types = ["", "cifs", "google_drive"]
-		mount_types_names = [_("Local"), _("SAMBA"), _("Google Drive")]
+		mount_types = ["", "cifs", "sshfs", "google_drive"]
+		mount_types_names = [_("Local"), _("SAMBA"), _("SSH"), _("Google Drive")]
 		mount_type_store = Gtk.ListStore(str, str)
 		i = 0
 		for t in mount_types:
@@ -406,7 +406,8 @@ class SettingsWindow(Gtk.Window):
 
 		self.mount_boxes = {}
 
-		# Samba
+
+		# SAMBA
 		samba_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		vbox.add(samba_box)
 		# Samba hostname
@@ -434,7 +435,22 @@ class SettingsWindow(Gtk.Window):
 
 		self.mount_boxes["cifs"] = samba_box
 
-		# Samba share
+
+		# SSH
+		sshfs_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+		vbox.add(sshfs_box)
+		# Samba hostname
+		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+		sshfs_box.add(hbox)
+		label = Gtk.Label(_("Host"), xalign=0)
+		self.sshfs_host_entry = Gtk.Entry()
+		hbox.pack_start(label, True, True, 0)
+		hbox.pack_start(self.sshfs_host_entry, False, True, 0)
+
+		self.mount_boxes["sshfs"] = sshfs_box
+
+
+		# Path
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 		vbox.add(hbox)
 		label = Gtk.Label(_("Backup path"), xalign=0)
@@ -444,7 +460,7 @@ class SettingsWindow(Gtk.Window):
 		hbox.pack_start(self.path_prefix_entry, False, True, 0)
 
 		# Load mount settings
-		if self.cfg["mount"]["type"] == "cifs": # Samba
+		if self.cfg["mount"]["type"] == "cifs": # SAMBA
 			host = ""
 			share = ""
 			target = self.cfg["mount"]["target"]
@@ -454,6 +470,8 @@ class SettingsWindow(Gtk.Window):
 
 			self.samba_host_entry.set_text(host)
 			self.samba_share_entry.set_text(share)
+		if self.cfg["mount"]["type"] == "sshfs": # SSH
+			self.sshfs_host_entry.set_text(self.cfg["mount"]["target"])
 
 		# Encrypt filesystem?
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
@@ -462,8 +480,8 @@ class SettingsWindow(Gtk.Window):
 		self.encrypt_check.set_active(self.cfg["mount"].get("encrypt", False))
 		hbox.add(self.encrypt_check)
 
+
 		vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-		vbox.set_border_width(10)
 		if stack is not None:
 			stack.add_titled(vbox, "schedule", _("Schedule"))
 		else:
@@ -538,7 +556,6 @@ class SettingsWindow(Gtk.Window):
 
 		# Buttons
 		hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-		hbox.set_border_width(10)
 		box.add(hbox)
 		button = Gtk.Button(_("About"))
 		button.connect("clicked", parent.on_about_clicked)
@@ -587,12 +604,14 @@ class SettingsWindow(Gtk.Window):
 		self.cfg["mount"]["path"] = self.path_prefix_entry.get_text()
 		self.cfg["mount"]["encrypt"] = self.encrypt_check.get_active()
 
-		if self.cfg["mount"]["type"] == "cifs": # Samba
+		if self.cfg["mount"]["type"] == "cifs": # SAMBA
 			self.cfg["mount"]["target"] = "//"+self.samba_host_entry.get_text()+"/"+self.samba_share_entry.get_text()
 			opts = ""
 			if self.samba_guest_check.get_active():
 				opts = "guest"
 			self.cfg["mount"]["options"] = opts
+		if self.cfg["mount"]["type"] == "sshfs": # SAMBA
+			self.cfg["mount"]["target"] = self.sshfs_host_entry.get_text()
 		if self.cfg["mount"]["type"] == "": # No fs mounting
 			self.cfg["mount"]["target"] = ""
 			self.cfg["mount"]["options"] = ""

@@ -28,5 +28,17 @@ class FuseBase:
 	def get_type(self):
 		return "base"
 
-	def get_inner_path(self):
+	def get_mount_path(self):
 		return self.mount_path
+
+	def get_inner_path(self):
+		return self.get_mount_path()
+
+	def _get_inner_path(self, path):
+		if path.startswith("/"):
+			path = path[1:]
+
+		mount_path = self.get_mount_path()
+		if path != "":
+			mount_path = os.path.join(mount_path, path)
+		return mount_path

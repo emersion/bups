@@ -46,7 +46,4 @@ class FuseRoot(FuseBase):
 		return self.cfg.get("type", "base")
 
 	def get_inner_path(self):
-		mount_path = self.mount_path
-		if self.cfg.get("path", "") != "":
-			mount_path = os.path.join(mount_path, self.cfg["path"])
-		return mount_path
+		return self._get_inner_path(self.cfg.get("path", ""))
