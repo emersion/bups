@@ -58,10 +58,10 @@ class BupWorker:
 		args = ['index', '-u', dirpath]
 		if 'exclude_paths' in opts:
 			for excluded in opts['exclude_paths']:
-				args.append('--exclude', excluded)
+				args.extend(('--exclude', excluded))
 		if 'exclude_rxs' in opts:
 			for excluded in opts['exclude_rxs']:
-				args.append('--exclude-rx', excluded)
+				args.extend(('--exclude-rx', excluded))
 		if 'one_file_system' in opts and opts['one_file_system']:
 			args.append('--one-file-system')
 
