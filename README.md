@@ -37,3 +37,9 @@ If you downloaded the source, run `bin/bups`.
 # Configuration
 
 You can edit config with the GUI. You can also manually edit `~/.config/bups/config.json`.
+
+# Translating
+
+The project is on Transifex: https://www.transifex.com/emersion/bups/
+
+You can also email me `.po` files if you don't want to register on Transifex. Download the source and run `tools/makepot.sh` to generate `lang/messages.pot`.
