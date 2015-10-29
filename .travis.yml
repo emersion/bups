@@ -4,7 +4,7 @@ python:
 before_install:
   - sudo apt-get install python-all
   - gem install package_cloud
-  - pip install stdeb
+  - sudo pip install stdeb
 script:
   - tools/makedeb.sh
   - package_cloud push emersion/bups/elementaryos/freya deb_dist/python-bups_*_all.deb
