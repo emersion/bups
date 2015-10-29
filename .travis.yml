@@ -1,0 +1,9 @@
+language: python
+python:
+  - "2.7"
+before_install:
+  - gem install package_cloud
+  - pip install stdeb
+script:
+  - tools/makedeb.sh
+  - package_cloud push emersion/bups/elementaryos/freya deb_dist/python-bups_*_all.deb
