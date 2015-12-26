@@ -9,7 +9,7 @@ addons:
     - rubygems
 install:
   - gem install package_cloud
-  - pip install stdeb
+  - pip install --user stdeb
 script:
   - tools/makedeb.sh
   - package_cloud push emersion/bups/elementaryos/freya deb_dist/python-bups_*_all.deb
