@@ -7,7 +7,7 @@ import os
 from subprocess import PIPE, Popen, call
 import contextlib
 import json
- 
+
 # Unix, Windows and old Macintosh end-of-line
 newlines = ['\n', '\r\n', '\r']
 def unbuffered(proc, stream='stdout'):
@@ -83,30 +83,31 @@ class BupWorker:
 			env['BUP_DIR'] = self.dir
 
 		# Start subprocess
-		patched_cmd = os.path.dirname(__file__)+'/cmd/'+args[0]+'-cmd.py'
-		if os.path.isfile(patched_cmd):
-			args[0] = patched_cmd
-			args.insert(0, sys.executable)
 
-			if 'onprogress' in callbacks:
-				args += ['--format', 'json']
-				def onstderr(line):
-					progress = None
-					try:
-						progress = json.loads(line)
-					except ValueError, e:
-						if 'onstatus' in callbacks:
-							callbacks['onstatus'](line)
-						else:
-							print(line)
-						return
-					callbacks['onprogress'](progress)
-				callbacks['stderr'] = onstderr
-		else:
-			args.insert(0, os.environ['BUP_MAIN_EXE'])
+		# patched_cmd = os.path.dirname(__file__)+'/cmd/'+args[0]+'-cmd.py'
+		# if os.path.isfile(patched_cmd):
+		# 	args[0] = patched_cmd
+		# 	args.insert(0, sys.executable)
+		#
+		# 	if 'onprogress' in callbacks:
+		# 		args += ['--format', 'json']
+		# 		def onstderr(line):
+		# 			progress = None
+		# 			try:
+		# 				progress = json.loads(line)
+		# 			except ValueError, e:
+		# 				if 'onstatus' in callbacks:
+		# 					callbacks['onstatus'](line)
+		# 				else:
+		# 					print(line)
+		# 				return
+		# 			callbacks['onprogress'](progress)
+		# 		callbacks['stderr'] = onstderr
 
-			if 'onstatus' in callbacks:
-				callbacks['stderr'] = callbacks['onstatus']
+		args.insert(0, os.environ['BUP_MAIN_EXE'])
+
+		if 'onstatus' in callbacks:
+			callbacks['stderr'] = callbacks['onstatus']
 
 		proc = Popen(args, env=env, stdout=None, stderr=PIPE, universal_newlines=True)
 

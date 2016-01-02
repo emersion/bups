@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 import tempfile
+import re
 
 from worker import BupWorker
 #from sudo import sudo
@@ -58,9 +59,50 @@ class BupManager:
 				"name": backupName
 			}
 
+			def status2progress(line):
+				m = re.search("Indexing:\s*(\d+)((?:,\s*done)?)\s*\((\d+) paths/s\)", line)
+				if m is not None:
+					percentage = None
+					if m.group(2) != "":
+						percentage = 100
+					return {
+						'status': 'indexing',
+						'percentage': percentage,
+						'total_paths': int(m.group(1)),
+						'paths_per_sec': int(m.group(3))
+					}
+
+				m = re.search("Reading index:\s*(\d+)((?:,\s*done)?)", line)
+				if m is not None:
+					percentage = None
+					if m.group(2) != "":
+						percentage = 100
+					return {
+						'status': 'reading_index',
+						'percentage': percentage,
+						'files_done': int(m.group(1))
+					}
+
+				m = re.search("Saving:\s*([\d.]+)%\s*\((\d+)/(\d+)k, (\d+)/(\d+) files\)", line)
+				if m is not None:
+					return {
+						'status': 'saving',
+						'percentage': float(m.group(1)),
+						'bytes_done': int(m.group(2)),
+						'bytes_total': int(m.group(3)),
+						'files_done': int(m.group(4)),
+						'files_total': int(m.group(5))
+					}
+
+				return None
+
 			def onprogress(data):
 				return callbacks["onprogress"](data, ctx)
 			def onstatus(line):
+				progress = status2progress(line)
+				if progress is not None:
+					return callbacks["onprogress"](progress, ctx)
+
 				return callbacks["onstatus"](line, ctx)
 
 			callbacks["onstatus"]("Backing up "+backupName+": indexing files...", ctx)
