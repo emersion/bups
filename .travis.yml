@@ -12,4 +12,8 @@ install:
   - pip install stdeb
 script:
   - tools/makedeb.sh
-  - package_cloud push emersion/bups/elementaryos/freya deb_dist/python-bups_*_all.deb
+after_success:
+  if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && 
+      [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+    package_cloud push emersion/bups/elementaryos/freya deb_dist/python-bups_*_all.deb
+  fi
