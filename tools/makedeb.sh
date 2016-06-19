@@ -5,4 +5,4 @@ setup="python2 $dirname/../setup.py"
 
 rm -rf "$dirname/../deb_dist"
 $dirname/../tools/makemo.sh
-$setup --command-packages=stdeb.command bdist_deb
+$setup --command-packages=stdeb.command bdist_deb --no-autoreq
