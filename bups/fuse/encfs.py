@@ -10,9 +10,13 @@ class FuseEncfs(FuseBase):
 		if parent_path is None:
 			raise ValueError("EncFS filesystem requires parent path")
 
+		askpass = "/usr/lib/ssh/ssh-askpass"
+		if not os.path.isfile(askpass):
+			raise RuntimeError("Cannot find "+askpass)
+
 		FuseBase.mount(self, mount_path)
 
-		res = subprocess.call(["encfs --standard --extpass=/usr/lib/ssh/ssh-askpass "+parent_path+" "+mount_path], shell=True)
+		res = subprocess.call(["encfs --standard --extpass="+askpass+" "+parent_path+" "+mount_path], shell=True)
 		if res != 0:
 			raise RuntimeError("Cannot mount encfs filesystem [#"+str(res)+"]")
 
