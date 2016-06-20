@@ -632,7 +632,7 @@ class SettingsWindow(Gtk.Window):
 
 		dirname = os.path.realpath(os.path.dirname(__file__))
 		logfile = dirname+"/scheduler-log.log"
-		cmd = "python2 "+dirname+"/scheduler_worker.py "+config.file_path()
+		cmd = sys.executable+" "+dirname+"/scheduler_worker.py "+config.file_path()
 		cmd += " > "+logfile+" 2>&1"
 
 		cfg = {
@@ -948,7 +948,7 @@ class BupWindow(Gtk.ApplicationWindow):
 
 	def on_sidebar_save(self, btn):
 		index = self.get_selected_row_index()
-		
+
 		cfg = self.config["dirs"][index]
 
 		cfg["name"] = self.sidebar_name_entry.get_text()
@@ -1186,7 +1186,7 @@ class BupWindow(Gtk.ApplicationWindow):
 		if self.config is None:
 			print("INFO: save_config() called but no config set")
 			return
-		
+
 		print("Saving config")
 
 		try:
