@@ -28,6 +28,7 @@ Installation:
 * If you are running on a Debian-based system, you can install the `.deb` package from here: http://fs.emersion.fr/public/bups/
 * If you are using Archlinux, install it from the AUR: https://aur.archlinux.org/packages/bups/
 * For development, you can download the source:
+  
   ```shell
   git clone https://github.com/emersion/bups.git
   cd bups
