@@ -78,31 +78,13 @@ class BupWorker:
 		self.run(['restore', '-C', to_path, from_path], callbacks)
 
 	def run(self, args, callbacks={}):
-		env = {'BUP_FORCE_TTY': '2'}
+		env = {
+			'BUP_FORCE_TTY': '2',
+			'BUP_MAIN_EXE': os.environ['BUP_MAIN_EXE'],
+			'PATH': os.environ['PATH']
+		}
 		if self.dir is not None:
 			env['BUP_DIR'] = self.dir
-
-		# Start subprocess
-
-		# patched_cmd = os.path.dirname(__file__)+'/cmd/'+args[0]+'-cmd.py'
-		# if os.path.isfile(patched_cmd):
-		# 	args[0] = patched_cmd
-		# 	args.insert(0, sys.executable)
-		#
-		# 	if 'onprogress' in callbacks:
-		# 		args += ['--format', 'json']
-		# 		def onstderr(line):
-		# 			progress = None
-		# 			try:
-		# 				progress = json.loads(line)
-		# 			except ValueError, e:
-		# 				if 'onstatus' in callbacks:
-		# 					callbacks['onstatus'](line)
-		# 				else:
-		# 					print(line)
-		# 				return
-		# 			callbacks['onprogress'](progress)
-		# 		callbacks['stderr'] = onstderr
 
 		args.insert(0, os.environ['BUP_MAIN_EXE'])
 
