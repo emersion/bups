@@ -1,12 +1,14 @@
 import ConfigParser
 import io
 import os
-import tempfile
+from subprocess import Popen
 
-config_dir = os.path.join(os.path.expanduser("~"), ".config/systemd/user/")
+base_dir = os.getenv("XDG_CONFIG_DIR", os.path.join(os.path.expanduser("~"), ".config"))
+config_dir = os.path.join(base_dir, "systemd/user")
 
 def is_available():
-    return os.path.exists(config_dir)
+    return any(os.access(os.path.join(path, "systemctl"), os.X_OK) 
+                for path in os.getenv("PATH").split(os.pathsep))
 
 def get_timer_path(job_id):
     return os.path.join(config_dir, job_id + ".timer")
