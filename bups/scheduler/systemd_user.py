@@ -1,7 +1,6 @@
 import ConfigParser
 import io
 import os
-from subprocess import Popen
 
 base_dir = os.getenv("XDG_CONFIG_DIR", os.path.join(os.path.expanduser("~"), ".config"))
 config_dir = os.path.join(base_dir, "systemd/user")
