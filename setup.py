@@ -16,7 +16,6 @@ setup(
 	name="Bups",
 	version=__version__,
 	author="emersion",
-	author_email="contact@emersion.fr",
 	url="https://github.com/emersion/bups",
 	description="Simple GUI for Bup, a very efficient backup system.",
 	license="MIT",
