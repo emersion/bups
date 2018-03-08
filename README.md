@@ -25,7 +25,7 @@ Changelog: https://github.com/emersion/bups/releases
 Requires Python 2, GTK 3 and Bup. Tested on Archlinux and elementary OS (so it should run on Ubuntu and Debian).
 
 Installation:
-* If you are running on a Debian-based system, you can install the `.deb` package from here: http://fs.emersion.fr/public/bups/
+* If you are running on a Debian-based system, you can install the `.deb` package from here: https://github.com/emersion/bups/releases
 * If you are using Archlinux, install it from the AUR: https://aur.archlinux.org/packages/bups/
 * For development, you can download the source:
   
